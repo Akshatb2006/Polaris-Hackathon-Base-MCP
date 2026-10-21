@@ -67,8 +67,10 @@ def warm_up(catalog):
 
 class MCPApplication:
     async def __call__(self, scope, receive, send):
-        if scope['method'] == 'GET':
-            # Stateless JSON transport offers no standalone server-to-client stream.
+        if scope['method'] == 'GET' and os.getenv('MCP_GET_STREAM', '0') != '1':
+            # Stateless JSON transport offers no standalone server-to-client stream. The brief asks
+            # for 405 here; MCP_GET_STREAM=1 restores the starter's behaviour (an open SSE stream)
+            # for clients that expect it.
             await PlainTextResponse('Method Not Allowed', status_code=405,
                                     headers={'Allow': 'POST, DELETE'})(scope, receive, send)
             return
