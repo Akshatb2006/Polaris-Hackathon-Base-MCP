@@ -32,6 +32,19 @@ CATALOG = [
     product('012', 'Bridal gown', 'Dress', 'Off White', 4999, 'Long wedding dress in tulle with lace.',
             category='Garment Full body'),
     product('013', 'Puffer jacket', 'Jacket', 'Black', 3999, 'Padded jacket in woven fabric, warm and lined.'),
+    product('014', 'Printed Sweatshirt', 'Sweater', 'Black', 999, 'Top in sweatshirt fabric with a motif.'),
+    product('015', 'Cosy jumper', 'Sweater', 'Black', 1999, 'Jumper in a soft knit with long sleeves.'),
+    product('016', 'Kids red tee', 'T-shirt', 'Red', 399, 'T-shirt in cotton jersey.', audience='Children Sizes 92-140',
+            section='Kids Boy'),
+    product('017', 'Adult red tee', 'T-shirt', 'Red', 799, 'T-shirt in cotton jersey.', audience='Divided',
+            section='Divided Collection'),
+    product('018', 'Max tee', 'T-shirt', 'White', 599, 'T-shirt in cotton jersey.', audience='Menswear',
+            section='Contemporary Casual'),
+    product('019', 'Greatest Dres', 'Dress', 'Blue', 1999, 'Long dress in jersey.', category='Garment Full body'),
+    product('020', 'Greatest Dres', 'Dress', 'Pink', 1999, 'Long dress in jersey.', category='Garment Full body'),
+    product('021', 'Greatest Dres', 'Dress', 'Green', 1999, 'Long dress in jersey.', category='Garment Full body'),
+    product('022', 'Make-up bag', 'Bag', 'Black', 1500, 'Make-up bag in a cotton weave with a zip.', category='Accessories',
+            audience='Ladies Accessories', section='Womens Small accessories'),
 ]
 
 
@@ -57,7 +70,8 @@ class EngineRules(unittest.TestCase):
 
     def test_mixed_choices_cover_both(self):
         got = self.ids(query='black jeans and white t-shirts')
-        self.assertEqual(set(got[:2]), {'004', '005'})
+        self.assertIn('004', got[:2])
+        self.assertTrue({'005', '018'} & set(got[:2]))   # jeans and a white tee lead the pooled list
 
     def test_complement_goes_to_recommendations_with_own_budget(self):
         out = self.catalog.search({'query': 'a dress under 2000 with a matching bag under 1000',
@@ -77,7 +91,7 @@ class EngineRules(unittest.TestCase):
         self.assertEqual(self.ids(query='Mike tee')[0], '010')   # exact name, never "bike"
 
     def test_audience_from_query_is_hard(self):
-        self.assertEqual(self.ids(query='t-shirt for men'), ['010'])
+        self.assertEqual(set(self.ids(query='t-shirt for men')), {'010', '018'})
 
     def test_brand_is_a_hard_requirement(self):
         self.assertEqual(self.ids(query='nike leggings'), ['011'])
@@ -99,8 +113,29 @@ class EngineRules(unittest.TestCase):
         self.assertTrue(got)
         self.assertFalse({'001', '002', '003', '012'} & set(got))    # no dresses for him
 
+    def test_description_head_noun_orders_same_typed_products(self):
+        got = self.ids(query='black sweater')
+        self.assertEqual(got[:2], ['015', '014'])        # "Jumper in ..." before "Top in sweatshirt fabric"
+        self.assertIn('014', got)                        # still a sweater by type
+
+    def test_adults_before_children_unless_asked(self):
+        self.assertEqual(self.ids(query='red t-shirt')[:2], ['017', '016'])
+        self.assertEqual(self.ids(query='red t-shirt for kids'), ['016'])
+
+    def test_mixed_choices_share_one_shopper(self):
+        got = self.ids(query='black dress and white t-shirt')
+        self.assertLess(got.index('005'), got.index('018'))   # her t-shirt before the men's one
+
+    def test_rare_catalog_typo_is_corrected(self):
+        self.assertEqual(self.catalog.engine.index.correct('dres'), 'dress')
+        self.assertEqual(set(self.ids(query='dres please')), {'001', '002', '003', '012', '019', '020', '021'})
+
+    def test_complementary_bag_is_a_handbag(self):
+        out = self.catalog.search({'query': 'a dress with a matching bag', 'include_recommendations': True})
+        self.assertEqual([r['id'] for r in out['recommendations']][0], '006')
+
     def test_empty_query_sorts_exactly(self):
-        self.assertEqual(self.ids(sort_by='price', sort_order='asc', limit=3), ['009', '005', '010'])
+        self.assertEqual(self.ids(sort_by='price', sort_order='asc', limit=3), ['009', '016', '005'])
 
 
 if __name__ == '__main__':

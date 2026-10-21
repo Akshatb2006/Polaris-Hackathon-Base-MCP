@@ -8,7 +8,7 @@ t-shirts") -> extract per-choice constraints -> scope constraints (per choice vs
 import re
 from dataclasses import dataclass, field
 
-from .index import analyze, name_key, raw_tokens, text_concepts
+from .index import CONCEPT_PATTERNS, analyze, name_key, raw_tokens, text_concepts
 from .taxonomy import (BRANDS, CONCEPTS, COLORS, EXPANSIONS, GENERIC_FASHION, MATERIALS, OCCASIONS, OUT_OF_DOMAIN,
                        PATTERNS, STOPWORDS, WHO_WORDS)
 
@@ -78,6 +78,7 @@ class Intent:
     soft_premium: bool = False
     soft_quality: bool = False
     context: str = ''                                  # "to go with my black dress" -> context only
+    prefer_who: str = None                             # soft: "dress and t-shirt" is one shopper, so her t-shirt
 
     @property
     def semantic_text(self):
@@ -90,6 +91,21 @@ class Intent:
                  if w not in STOPWORDS and w not in WHO_WORDS and w not in OCCASIONS and not w.isdigit()]
         words += raw_tokens(self.expansion)
         return analyze(' '.join(words))
+
+    def attribute_words(self):
+        """Content words beyond the garment, colour, audience and budget: "striped", "long sleeve", "oversized".
+
+        With none, the request is a plain garment-and-colour lookup where the product's type and head noun
+        settle the order; with some, those words carry the shopper's actual requirement.
+        """
+        text = self.text
+        for concept in self.concepts:
+            text = CONCEPT_PATTERNS[concept].sub(' ', text)
+        for phrase in sorted(COLORS, key=len, reverse=True):
+            text = re.sub(r'(?<![a-z\-])%s(?![a-z\-])' % re.escape(phrase), ' ', text)
+        text = MAX_RE.sub(' ', MIN_RE.sub(' ', RANGE_RE.sub(' ', AROUND_RE.sub(' ', BARE_PRICE_RE.sub(' ', text)))))
+        return [w for w in raw_tokens(text) if w not in STOPWORDS and w not in WHO_WORDS and not w.isdigit()
+                and w not in ('s', 'with', 'kind', 'option')]
 
     def describe(self):
         out = {'text': self.text}
@@ -278,8 +294,9 @@ class QueryParser:
         if occ_text:
             intent.expansion = (intent.expansion + ' ' + ' '.join(occ_text)).strip()
         # A wedding guest is not the bride: bridal gowns stay findable but rank below guest outfits.
-        if _has(positive, 'wedding') and not re.search(r'\b(?:bride|bridal|my (?:own )?wedding|getting married|wedding dress)', positive):
-            intent.demote_phrases = ['wedding dress', 'bridal', 'bride', 'wedding gown']
+        # Likewise a dress for dinner, a party or a date is not a wedding dress.
+        if not re.search(r'\b(?:bride|bridal|my (?:own )?wedding|getting married|wedding dress|wedding gown|marriage)', positive):
+            intent.demote_phrases = ['wedding dress', 'bridal', 'bride', 'wedding gown', 'wedding']
         intent.brand = find_brand(positive)
         intent.who = self._who(positive)
         self._prices(positive, intent)
@@ -369,6 +386,14 @@ class QueryParser:
             shared = whos.pop()
             for i in all_intents:
                 i.who = i.who or shared
+        # "black dress and white t-shirt" is one shopper's outfit: the dress implies her t-shirt
+        # (a soft preference; men's items stay findable).
+        implied = {'women' if c in WOMEN_ONLY_CONCEPTS else 'men'
+                   for i in all_intents for c in i.concepts if c in WOMEN_ONLY_CONCEPTS | MEN_ONLY_CONCEPTS}
+        if len(implied) == 1 and not whos:
+            for i in all_intents:
+                if i.who is None:
+                    i.prefer_who = next(iter(implied))
         ratings = [i.min_rating for i in intents if i.min_rating]
         if len(ratings) == 1:
             for i in intents:

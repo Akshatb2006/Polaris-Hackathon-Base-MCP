@@ -47,10 +47,17 @@ def name_key(text):
 
 
 def description_head(description):
-    """The garment noun phrase that opens a description, e.g. 'Calf-length dress' or '5-pocket jeans'."""
+    """The garment noun phrase that opens a description, e.g. 'Calf-length dress' or '5-pocket jeans'.
+
+    Adjective lists before the noun are kept ("Long, sleeveless dress") when cutting at the first
+    comma would leave no garment noun at all.
+    """
     if not description:
         return ''
-    head = re.split(r'\.|,| in | with | made | from | that | and a | containing ', description, maxsplit=1)[0]
+    clause = re.split(r'\.| in | with | made | from | that | and a | containing ', description, maxsplit=1)[0]
+    head = clause.split(',', 1)[0]
+    if ',' in clause and not text_concepts(head.casefold()):
+        head = clause
     return ' '.join(head.split()[:6])
 
 
@@ -225,6 +232,9 @@ class CatalogIndex:
             for w in product_who(p):
                 self.who[w][i] = True
             self.heads.append(description_head(p.get('description')))
+        # The garment noun each description opens with ("Top in sweatshirt fabric" is a top even when
+        # typed Sweater); '' when the description names no garment.
+        self.head_concept = np.array([(text_concepts(h.casefold()) or [''])[-1] for h in self.heads], dtype=object)
         self.who['unknown'] = ~(self.who['men'] | self.who['women'] | self.who['kids'])
         # Uninformative names ("id", "1", "x") give a shopper nothing to go on; rank them last.
         self.weak_name = np.array([len(re.sub(r'[^a-z]', '', p['name'].casefold())) < 3 for p in self.products])
@@ -349,9 +359,15 @@ class CatalogIndex:
         """
         if len(word) < 4 or not word.isalpha() or word in STOPWORDS or word in self.lexicon:
             return word
-        if word in self.ood_words or word in STOPWORDS or (
-                word in self.known_words and self.catalog_freq.get(word, 0) >= 3):
+        if word in self.ood_words or word in STOPWORDS:
             return word
+        if word in self.known_words and self.catalog_freq.get(word, 0) >= 3:
+            # Catalog words are kept as written ("Mike tee") unless they are rare and one edit from
+            # a shopper word the catalog uses hundreds of times more ("dres" -> "dress").
+            freq = self.catalog_freq[word]
+            near = [c for c in self._candidates(word) if c in self.lexicon and _damerau(word, c) == 1
+                    and c[0] == word[0] and self.word_freq.get(c, 0) >= max(200, 100 * freq)]
+            return min(near, key=lambda c: (-self.word_freq.get(c, 0), c)) if near and freq < 50 else word
         if word in self.known_words:
             # a catalog hapax one edit from shopper vocabulary is most likely a typo ("sunglases")
             near = [c for c in self._candidates(word) if c in self.lexicon and _damerau(word, c) == 1

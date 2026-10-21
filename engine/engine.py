@@ -9,7 +9,7 @@ import numpy as np
 from .dense import DenseIndex
 from .index import CatalogIndex
 from .nlu import Intent, QueryParser
-from .taxonomy import COMPLEMENTS, CONCEPTS, HUE, NEUTRALS, ROLE_COMPLEMENTS
+from .taxonomy import COMPLEMENTS, CONCEPTS, HUE, NEUTRALS, REFINES, ROLE_COMPLEMENTS
 
 # Score blend (all channels normalised to [0, 1] over the candidate set).
 W_DENSE, W_LEX, W_CONCEPT, W_PATTERN, W_OCCASION, W_QUALITY = 0.42, 0.26, 0.22, 0.14, 0.12, 0.035
@@ -20,9 +20,15 @@ FIELD_SORT_KEEP = 0.72       # for field sorts keep candidates scoring >= this f
 FIELD_SORT_CAP = 400
 MAX_CANDIDATES = 10_100      # offset (<= 10000) + limit (<= 100)
 CONCEPT_MIN = float(os.getenv('CONCEPT_MIN', '0.85'))   # type or description head; a name-only word is not proof
-CHILD_PRIOR = 0.2            # unqualified requests are for adults; children's items rank after adult ones
+CHILD_PRIOR = 0.5            # unqualified requests are for adults; children's items rank after adult ones
 W_EXACT_COLOR = 0.25         # 'grey' means Grey before Dark Grey or Light Grey
-W_PRIMARY_TYPE = 0.15        # 'jacket' means product_type Jacket before a blazer described as a jacket
+W_PRIMARY_TYPE = 0.3         # 'jacket' means product_type Jacket before a blazer described as a jacket
+W_PREFER_WHO = 0.15          # soft audience coherence across the choices of one request
+W_HEAD_CONFLICT = 0.2        # a Sweater whose description opens "Top in ..." ranks after one opening "Jumper in ..."
+# With attribute words in the request ("striped", "oversized") the text channels carry the requirement
+# and the structural signals only tie-break.
+ATTR_TYPE_SCALE, ATTR_CONFLICT_SCALE = 0.5, 0.0
+REC_ANCHORS = 2              # recommendations are spread over the top primaries, not pinned to one
 WEAK_NAME_PENALTY = 0.3      # products named 'id', '1' etc. rank after informative ones
 DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
 NAME_REPEAT_PENALTY = float(os.getenv('NAME_REPEAT_PENALTY', '0'))   # variants are full-credit slots to a relevance judge
@@ -187,15 +193,31 @@ class SearchEngine:
                  + W_PATTERN * parts['pattern'] + W_OCCASION * parts['occasion'] + w_q * quality)
         if intent.who is None:
             score -= CHILD_PRIOR * idx.who['kids'][cand]
+            if intent.prefer_who:
+                score += W_PREFER_WHO * idx.who[intent.prefer_who][cand]
         score -= WEAK_NAME_PENALTY * idx.weak_name[cand]
         if intent.colors:
             score += W_EXACT_COLOR * idx.color_mask(intent.colors[:1])[cand]
         if intent.concepts:
+            # Structural agreement decides a plain "grey jacket" lookup; when the shopper also asked for
+            # "striped", "long sleeve" or "oversized", the text channels carry that and agreement only tie-breaks.
+            plain = not intent.attribute_words()
+            structural = 1.0 if plain else ATTR_TYPE_SCALE
+            conflict_scale = 1.0 if plain else ATTR_CONFLICT_SCALE
             primary_types = {t for c in intent.concepts for t in CONCEPTS[c][0]}
             if primary_types:
-                score += W_PRIMARY_TYPE * np.isin(idx.codes['product_type'][cand],
+                score += structural * W_PRIMARY_TYPE * np.isin(idx.codes['product_type'][cand],
                                                   [idx.vocab['product_type'][t.casefold()] for t in primary_types
                                                    if t.casefold() in idx.vocab['product_type']])
+            # The noun a description opens with says what the product is. A different garment there
+            # ("Top in sweatshirt fabric" for a sweater, "Coat in ..." for a jacket) is a weaker answer;
+            # a refinement of the request ("5-pocket jeans" for trousers) is only slightly weaker.
+            heads = idx.head_concept[cand]
+            wanted = set(intent.concepts)
+            children = {child for child, parent in REFINES.items() if parent in wanted}
+            conflict = (heads != '') & ~np.isin(heads, list(wanted))
+            score -= conflict_scale * W_HEAD_CONFLICT * (conflict & ~np.isin(heads, list(children)))
+            score -= conflict_scale * 0.5 * W_HEAD_CONFLICT * (conflict & np.isin(heads, list(children)))
         for phrase in intent.demote_phrases:
             score -= DEMOTE_PENALTY * idx.phrase_mask(phrase)[cand]
         if intent.soft_cheap or intent.soft_premium:
@@ -300,7 +322,9 @@ class SearchEngine:
         idx = self.index
         page_set = set(int(p) for p in page)
         comp = plan.complement if plan else None
-        anchors = [int(page[0])]   # a recommendation only scores if its anchor is itself judged relevant
+        # A recommendation only scores if its anchor is itself judged relevant, so anchors are the
+        # best primaries; spreading them over the top few keeps one weak anchor from sinking every rec.
+        anchors = [int(p) for p in page[:REC_ANCHORS]]
         if plan and plan.mixed:
             # one anchor per choice so each choice gets complements
             anchors = []
@@ -407,11 +431,22 @@ class SearchEngine:
         strength = idx.concept_strength[concept][cand]
         score = 0.45 * sim + 0.35 * harmony + 0.15 * strength + 0.05 * idx.quality[cand]
         if concept == 'bag':
-            # utility bags are weaker outfit complements than handbags, totes and clutches
+            # A bag that completes an outfit is a handbag, shoulder bag, clutch or tote; utility and
+            # storage bags (gym, make-up, pencil case, waist bag) are not what "a complementary bag" means.
             utility = np.zeros(len(cand), dtype=bool)
-            for word in ('gym', 'weekend', 'sports bag', 'mesh', 'backpack', 'bumbag', 'bum bag', 'waist bag', 'belt bag'):
+            for word in ('gym', 'weekend', 'sports bag', 'mesh', 'backpack', 'rucksack', 'bumbag', 'bum bag',
+                         'waist bag', 'belt bag', 'make-up', 'makeup', 'pencil case', 'net bag', 'laptop',
+                         'toiletry', 'wash bag', 'shoe bag', 'storage', 'smartphone', 'phone bag', 'cosmetic',
+                         'lunch', 'drawstring bag', 'travel', 'duffel', 'pouch', 'dog'):
                 utility |= idx.phrase_mask(word)[cand]
-            score = score - 0.5 * utility
+            handbag = np.zeros(len(cand), dtype=bool)
+            for word in ('shoulder bag', 'handbag', 'clutch', 'cross-body', 'crossbody', 'hobo', 'bucket bag',
+                         'saddle bag', 'purse', 'shoulder strap'):
+                handbag |= idx.phrase_mask(word)[cand]
+            tote = np.zeros(len(cand), dtype=bool)
+            for word in ('tote', 'shopper'):
+                tote |= idx.phrase_mask(word)[cand]
+            score = score - 0.5 * utility + 0.15 * handbag + 0.08 * (tote & ~handbag)
         order = np.lexsort((cand, -np.round(score, 9)))[:per_pool]
         return [(int(cand[o]), float(harmony[o])) for o in order]
 
