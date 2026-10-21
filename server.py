@@ -67,7 +67,7 @@ def warm_up(catalog):
 
 class MCPApplication:
     async def __call__(self, scope, receive, send):
-        if os.getenv('MCP_TRACE', '0') == '1':
+        if os.getenv('MCP_TRACE', '1') == '1':   # diagnostic build: tracing on unless MCP_TRACE=0
             await self._traced(scope, receive, send)
         else:
             await self._handle(scope, receive, send)
