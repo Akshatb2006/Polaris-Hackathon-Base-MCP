@@ -34,9 +34,12 @@ async def call_tool(name, arguments):
     return await anyio.to_thread.run_sync(catalog.search, arguments)
 
 
+ALLOWED_HOSTS = os.getenv('MCP_ALLOWED_HOSTS', 'localhost:*,127.0.0.1:*,[::1]:*').strip()
 security = TransportSecuritySettings(
-    allowed_hosts=[h.strip() for h in os.getenv('MCP_ALLOWED_HOSTS',
-        'localhost:*,127.0.0.1:*,[::1]:*').split(',') if h.strip()],
+    # MCP_ALLOWED_HOSTS='*' is for hosting platforms that assign the public hostname at deploy
+    # time: it turns off only the Host/Origin allowlist (DNS-rebinding protection for browsers).
+    enable_dns_rebinding_protection=ALLOWED_HOSTS != '*',
+    allowed_hosts=[h.strip() for h in ALLOWED_HOSTS.split(',') if h.strip() and h.strip() != '*'],
     allowed_origins=[o.strip() for o in os.getenv('MCP_ALLOWED_ORIGINS', '').split(',') if o.strip()],
 )
 sessions = StreamableHTTPSessionManager(server, json_response=True, stateless=True, security_settings=security)

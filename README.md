@@ -179,7 +179,7 @@ Environment variables:
 | `HOST` | `0.0.0.0` | Listener interface |
 | `PORT` | `8000` | Listener port; Docker port mapping must match if changed |
 | `CATALOG_PATH` | `data/products.json` next to server.py | Catalog file path |
-| `MCP_ALLOWED_HOSTS` | `localhost:*,127.0.0.1:*,[::1]:*` | Comma-separated accepted HTTP Host values |
+| `MCP_ALLOWED_HOSTS` | `localhost:*,127.0.0.1:*,[::1]:*` | Comma-separated accepted HTTP Host values; `*` accepts any Host (for platforms that assign the hostname at deploy time) |
 | `MCP_ALLOWED_ORIGINS` | empty | Explicit accepted browser origins; the benchmark client sends no Origin |
 
 No wildcard for every host is necessary. The server has no authentication, as required for this exercise. The template does not create AWS resources or deploy automatically.
