@@ -1,7 +1,10 @@
 .git
 .venv
+.models
 __pycache__
 **/__pycache__
 .env
 *.pyc
 .DS_Store
+eval/
+tests/

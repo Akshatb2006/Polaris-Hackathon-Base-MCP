@@ -1,0 +1,8 @@
+{
+  "fingerprint": "b57703ddfd576b41",
+  "model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "count": 105126,
+  "normalised": true,
+  "metric": "cosine"
+}

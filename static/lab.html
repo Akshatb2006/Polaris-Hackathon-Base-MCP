@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polaris Search Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f6f5; --panel:#fff; --ink:#14201c; --muted:#5d6d67; --line:#dce3e0; --accent:#0f6b5c; --accent-soft:#e2f0ec;
+  --dense:#3b6fd8; --lex:#c77a12; --concept:#0f6b5c; --pattern:#9b4dca; --occasion:#d14a6b; --bad:#b3261e;
+  --display:'Fraunces',Georgia,serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1412; --panel:#151e1b; --ink:#e3ebe8; --muted:#95a6a0; --line:#28332f; --accent:#5cc3ad; --accent-soft:#17302a;
+  --dense:#7ea2f0; --lex:#f0b35a; --concept:#5cc3ad; --pattern:#c79af0; --occasion:#f08aa3; --bad:#ff8a80; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
+.shell{max-width:1240px;margin:0 auto;padding:24px 16px 64px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+h1{font:600 1.9rem/1.1 var(--display);margin:0}
+.sub{color:var(--muted);font-size:.9rem}
+form{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px}
+.q{display:flex;gap:8px}
+.q input{flex:1;min-width:0;font:inherit;font-size:1.05rem;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{font:600 .95rem var(--body);padding:10px 18px;border-radius:6px;border:0;background:var(--accent);color:var(--panel);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:.85rem;color:var(--muted);align-items:center}
+.opts label{display:flex;gap:6px;align-items:center}
+.opts input,.opts select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:4px 6px;width:auto}
+.opts input[type=number]{width:90px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 .78rem var(--mono);padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);cursor:pointer;border:0}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.plan h2,.results h2{font:600 .78rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.verdict{font-weight:600}
+.verdict.no{color:var(--bad)}
+.intent{border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.intent .t{font-family:var(--mono);font-size:.82rem}
+.kv{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font:.74rem var(--mono);padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.tag b{color:var(--ink);font-weight:500}
+.meta{font:.8rem var(--mono);color:var(--muted)}
+.results{display:flex;flex-direction:column;gap:12px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.img{aspect-ratio:3/4;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--muted);font:.75rem var(--mono);max-width:100%}
+.img img{width:100%;height:100%;object-fit:cover}
+.body{padding:10px;display:flex;flex-direction:column;gap:4px;font-size:.83rem}
+.name{font-weight:600;font-size:.9rem}
+.row{display:flex;justify-content:space-between;gap:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+.price{color:var(--ink);font-weight:600}
+.bars{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--bg);margin-top:4px}
+.bars span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font:.74rem var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.reason{font-size:.78rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:28px;text-align:center;color:var(--muted)}
+.rank{font:.72rem var(--mono);color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.card{animation:in .25s ease both}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div><h1>Polaris Search Lab</h1><div class="sub">See how <code>search_products</code> reads a request, scores the catalog and builds an outfit.</div></div>
+    <div class="meta" id="health">connecting…</div>
+  </header>
+
+  <form id="f">
+    <div class="q"><input id="query" aria-label="Shopping request" value="A dress for dinner under INR 2000 with a matching bag under INR 1000"><button>Search</button></div>
+    <div class="chips" id="examples"></div>
+    <div class="opts">
+      <label>sort <select id="sort_by"><option>relevance</option><option>price</option><option>rating</option><option>review_count</option><option>id</option></select></label>
+      <label>order <select id="sort_order"><option>desc</option><option>asc</option></select></label>
+      <label>limit <input id="limit" type="number" min="1" max="100" value="12"></label>
+      <label>color <input id="f_color" placeholder="e.g. Black"></label>
+      <label>max ₹ <input id="f_max" type="number" min="0"></label>
+      <label><input id="recs" type="checkbox" checked> recommendations</label>
+    </div>
+  </form>
+
+  <div class="layout">
+    <section class="plan" id="plan"><h2>Query plan</h2><div class="meta">Run a search to see how it is understood.</div></section>
+    <section class="results">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline">
+        <h2 id="rtitle">Results</h2>
+        <div class="legend"><span><i style="background:var(--dense)"></i>semantic</span><span><i style="background:var(--lex)"></i>lexical</span><span><i style="background:var(--concept)"></i>garment</span><span><i style="background:var(--pattern)"></i>pattern</span><span><i style="background:var(--occasion)"></i>occasion</span></div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <h2 id="rectitle" hidden>Complete the look</h2>
+      <div class="grid" id="recgrid"></div>
+    </section>
+  </div>
+</div>
+<script>
+const EXAMPLES = ['A dress for dinner under INR 2000 with a matching bag under INR 1000', 'Black jeans and white T-shirts under INR 2000 each',
+  'something comfortable for a lazy Sunday', 'sneekers for men', 'outfit for a job interview', 'swimsuit, sunglasses and a sun hat',
+  'gold hoop earrings', 'striped shirt not blue', 'what can my toddler wear in the snow', 'spaceship engine'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+EXAMPLES.forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = q;
+  b.onclick = () => { $('query').value = q; run(); }; $('examples').appendChild(b); });
+
+fetch('healthz').then(r => r.json()).then(h => $('health').textContent = `${h.products.toLocaleString()} products · ${h.dense ? 'hybrid dense + lexical' : 'lexical only'}`)
+  .catch(() => $('health').textContent = 'server unreachable');
+
+function args() {
+  const a = {query: $('query').value, sort_by: $('sort_by').value, sort_order: $('sort_order').value,
+             limit: Math.max(1, Math.min(100, +$('limit').value || 10)), include_recommendations: $('recs').checked};
+  const f = {};
+  if ($('f_color').value.trim()) f.color = $('f_color').value.trim();
+  if ($('f_max').value !== '') f.max_price = +$('f_max').value;
+  if (Object.keys(f).length) a.filters = f;
+  return a;
+}
+
+function tags(obj) {
+  const skip = new Set(['text']);
+  return Object.entries(obj).filter(([k]) => !skip.has(k)).map(([k, v]) =>
+    `<span class="tag">${esc(k.replace(/_/g, ' '))}: <b>${esc(Array.isArray(v) ? v.join(', ') : v === true ? 'yes' : v)}</b></span>`).join('');
+}
+
+function renderPlan(t, ms) {
+  const p = t.plan;
+  if (!p) { $('plan').innerHTML = `<h2>Query plan</h2><div class="meta">Empty query: exact catalog filter + sort path · ${ms.toFixed(0)} ms</div>`; return; }
+  const corr = Object.entries(p.corrections || {}).map(([a, b]) => `${esc(a)} → ${esc(b)}`).join(', ');
+  const intents = p.intents.map((it, k) => {
+    const tr = (t.intents || [])[k];
+    return `<div class="intent"><div class="t">${p.mixed ? `choice ${k + 1}: ` : ''}${esc(it.text)}</div><div class="kv">${tags(it)}</div>
+      ${tr ? `<div class="meta">${tr.candidates.toLocaleString()} candidates after hard constraints${tr.notes?.length ? ' · ' + esc(tr.notes.join('; ')) : ''}</div>` : ''}</div>`;
+  }).join('');
+  $('plan').innerHTML = `<h2>Query plan</h2>
+    <div class="verdict ${p.shoppable ? '' : 'no'}">${p.shoppable ? 'Shopping request' : 'Declined: empty result'}</div>
+    <div class="meta">${esc(p.reason)} · ${ms.toFixed(0)} ms</div>
+    ${corr ? `<div class="meta">spelling: ${corr}</div>` : ''}
+    ${p.shoppable ? intents : ''}
+    ${p.shoppable && p.complement ? `<div class="intent"><div class="t">complement${p.complement.text ? ': ' + esc(p.complement.text) : ' (outfit graph)'}</div><div class="kv">${tags(p.complement)}</div></div>` : ''}`;
+}
+
+function bar(s) {
+  if (!s) return '';
+  const parts = [['dense', .42], ['lexical', .26], ['concept', .22], ['pattern', .14], ['occasion', .12]];
+  const vals = parts.map(([k, w]) => [k, Math.max(0, (s[k] || 0) * w)]);
+  const total = vals.reduce((a, [, v]) => a + v, 0) || 1;
+  const color = {dense: 'var(--dense)', lexical: 'var(--lex)', concept: 'var(--concept)', pattern: 'var(--pattern)', occasion: 'var(--occasion)'};
+  return `<div class="bars" title="score ${s.score}">${vals.map(([k, v]) => `<span style="width:${(v / total * 100).toFixed(1)}%;background:${color[k]}"></span>`).join('')}</div>`;
+}
+
+function card(p, k, score, reason) {
+  return `<article class="card"><div class="img">${p.image_url ? `<img loading="lazy" alt="${esc(p.name)}" src="${esc(p.image_url)}" onerror="this.replaceWith(document.createTextNode('no image'))">` : 'no image'}</div>
+    <div class="body"><div class="rank">#${k + 1} · ${esc(p.id)}</div><div class="name">${esc(p.name)}</div>
+    <div class="row"><span>${esc(p.product_type)} · ${esc(p.color)}</span><span class="price">₹${p.price.toLocaleString()}</span></div>
+    <div class="row"><span>${esc(p.section)}</span><span>${p.rating == null ? 'no reviews' : '★ ' + p.rating + ' (' + p.reviews + ')'}</span></div>
+    ${bar(score)}${reason ? `<div class="reason">${esc(reason)}</div>` : ''}</div></article>`;
+}
+
+async function run() {
+  const t0 = performance.now();
+  $('grid').innerHTML = '<div class="meta">Searching…</div>';
+  let out;
+  try {
+    const r = await fetch('api/explain', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(args())});
+    out = await r.json();
+    if (!r.ok) throw new Error(out.error || r.statusText);
+  } catch (e) { $('grid').innerHTML = `<div class="empty">Request failed: ${esc(e.message)}</div>`; return; }
+  const ms = performance.now() - t0;
+  renderPlan(out.trace || {}, ms);
+  const scores = {};
+  (out.trace?.intents || []).forEach(i => (i.top || []).forEach(s => scores[s.id] = s));
+  $('rtitle').textContent = `Results · ${out.products.length}`;
+  $('grid').innerHTML = out.products.length ? out.products.map((p, k) => card(p, k, scores[p.id])).join('')
+    : '<div class="empty">No products. The engine returns empty arrays when a request is unrelated, impossible or lacks catalog evidence.</div>';
+  const recs = out.response.recommendations;
+  $('rectitle').hidden = !recs.length;
+  $('recgrid').innerHTML = recs.map((r, k) => card(out.rec_products[k], k, null, r.reason)).join('');
+}
+$('f').addEventListener('submit', e => { e.preventDefault(); run(); });
+run();
+</script>
+</body>
+</html>
