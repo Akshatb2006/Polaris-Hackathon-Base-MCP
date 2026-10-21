@@ -406,6 +406,10 @@ class SearchEngine:
             sim = np.zeros(len(cand))
         strength = idx.concept_strength[concept][cand]
         score = 0.45 * sim + 0.35 * harmony + 0.15 * strength + 0.05 * idx.quality[cand]
+        if concept == 'bag' and not comp.semantic_text:
+            # utility bags are weaker outfit complements than handbags, totes and clutches
+            score -= 0.5 * idx.phrase_mask('gym')[cand] | idx.phrase_mask('weekend')[cand] | \
+                idx.phrase_mask('sports bag')[cand] | idx.phrase_mask('mesh')[cand] | idx.phrase_mask('backpack')[cand]
         order = np.lexsort((cand, -np.round(score, 9)))[:per_pool]
         return [(int(cand[o]), float(harmony[o])) for o in order]
 
