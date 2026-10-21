@@ -29,6 +29,8 @@ W_HEAD_CONFLICT = 0.2        # a Sweater whose description opens "Top in ..." ra
 # and the structural signals only tie-break.
 ATTR_TYPE_SCALE, ATTR_CONFLICT_SCALE = 0.5, 0.0
 REC_ANCHORS = 2              # recommendations are spread over the top primaries, not pinned to one
+REC_SAME_COLOUR_MIN = 3      # an anchor is preferred when at least this many complements share its colour
+MIXED_HEAD_FIRST = 7         # of the first ten pooled results, how many come from the first-named choice
 WEAK_NAME_PENALTY = 0.3      # products named 'id', '1' etc. rank after informative ones
 DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
 NAME_REPEAT_PENALTY = float(os.getenv('NAME_REPEAT_PENALTY', '0'))   # variants are full-credit slots to a relevance judge
@@ -324,7 +326,8 @@ class SearchEngine:
         comp = plan.complement if plan else None
         # A recommendation only scores if its anchor is itself judged relevant, so anchors are the
         # best primaries; spreading them over the top few keeps one weak anchor from sinking every rec.
-        anchors = [int(p) for p in page[:REC_ANCHORS]]
+        # Among the top primaries, those whose colour the complement pool can match come first.
+        anchors = self._pick_anchors(page, plan, filters)
         if plan and plan.mixed:
             # one anchor per choice so each choice gets complements
             anchors = []
@@ -369,6 +372,23 @@ class SearchEngine:
             depth += 1
         return recs
 
+    def _pick_anchors(self, page, plan, filters):
+        head = [int(p) for p in page[:max(REC_ANCHORS, 5)]]
+        comp = plan.complement if plan else None
+        comp_intent = comp or Intent(text='')
+        page_set = set(int(p) for p in page)
+        matched = []
+        for anchor in head:
+            concepts = list(comp.concepts) if comp is not None and comp.concepts else self._complement_concepts(anchor, plan)
+            if not concepts:
+                continue
+            mask = self._complement_mask(anchor, concepts[0], comp_intent, page_set)
+            same = mask & (self.index.color_values == self.products[anchor]['color'])
+            if same.sum() >= REC_SAME_COLOUR_MIN:
+                matched.append(anchor)
+        anchors = matched[:REC_ANCHORS] or head[:REC_ANCHORS]
+        return sorted(anchors, key=head.index)
+
     def _complement_concepts(self, anchor, plan):
         idx = self.index
         concept = None
@@ -387,7 +407,8 @@ class SearchEngine:
         # drop complements that are the same kind as the anchor itself
         return [c for c in out if idx.concept_strength[c][anchor] == 0][:4]
 
-    def _complement_candidates(self, anchor, concept, comp, page_set, per_pool=12):
+    def _complement_mask(self, anchor, concept, comp, page_set):
+        """Products that may complement the anchor: right kind, audience and the complement's own constraints."""
         idx = self.index
         mask = idx.concept_strength[concept] >= 0.85
         if concept == 'bag':
@@ -415,12 +436,18 @@ class SearchEngine:
             mask &= idx.color_mask(comp.colors)
         if comp.exclude_colors:
             mask &= ~idx.color_mask(comp.exclude_colors)
-        cand = np.flatnonzero(mask)
-        cand = cand[~np.isin(cand, list(page_set))]
+        mask[list(page_set)] = False
+        return mask
+
+    def _complement_candidates(self, anchor, concept, comp, page_set, per_pool=12):
+        idx = self.index
+        cand = np.flatnonzero(self._complement_mask(anchor, concept, comp, page_set))
         if not len(cand):
             return []
         anchor_color = self.products[anchor]['color']
-        harmony = np.array([color_harmony(anchor_color, self.products[c]['color']) for c in cand])
+        # A bag "to go with" a black dress is first of all a black bag; then the same shade family,
+        # then a neutral, then colour-wheel harmony.
+        harmony = np.array([color_match(anchor_color, self.products[c]['color']) for c in cand])
         if self.dense is not None:
             sim = self.dense.matrix[cand] @ self.dense.matrix[anchor]
             if comp.semantic_text:
@@ -429,7 +456,7 @@ class SearchEngine:
         else:
             sim = np.zeros(len(cand))
         strength = idx.concept_strength[concept][cand]
-        score = 0.45 * sim + 0.35 * harmony + 0.15 * strength + 0.05 * idx.quality[cand]
+        score = 0.3 * sim + 0.5 * harmony + 0.15 * strength + 0.05 * idx.quality[cand]
         if concept == 'bag':
             # A bag that completes an outfit is a handbag, shoulder bag, clutch or tote; utility and
             # storage bags (gym, make-up, pencil case, waist bag) are not what "a complementary bag" means.
@@ -465,18 +492,46 @@ class SearchEngine:
         return text[:300]
 
 
-def _interleave(lists):
-    """Fair round-robin across choices so every requested choice appears near the top."""
-    out, seen = [], set()
-    longest = max(len(l) for l in lists)
-    for k in range(longest):
-        for l in lists:
-            if k < len(l):
-                p = int(l[k])
-                if p not in seen:
-                    seen.add(p)
-                    out.append(p)
-        if len(out) >= MAX_CANDIDATES:
+def _interleave(lists, head=10, head_first=MIXED_HEAD_FIRST):
+    """Pool the choices into one ranked list.
+
+    The first-named choice leads the request ("black dress and white t-shirt" is first of all about
+    the dress), so it fills most of the first page; the other choices share the remaining head slots
+    so every choice is covered, and the tail alternates fairly.
+    """
+    out, seen, pos = [], set(), [0] * len(lists)
+
+    def next_from(i):
+        while pos[i] < len(lists[i]):
+            p = int(lists[i][pos[i]])
+            pos[i] += 1
+            if p not in seen:
+                seen.add(p)
+                return p
+        return None
+
+    def round_robin(indices, stop):
+        progressed = False
+        for i in indices:
+            if len(out) >= stop:
+                break
+            p = next_from(i)
+            if p is not None:
+                out.append(p)
+                progressed = True
+        return progressed
+
+    if len(lists) > 1:
+        for _ in range(head_first):
+            p = next_from(0)
+            if p is None:
+                break
+            out.append(p)
+        while len(out) < head:
+            if not round_robin(range(1, len(lists)), head) and not round_robin([0], head):
+                break
+    while len(out) < MAX_CANDIDATES:
+        if not round_robin(range(len(lists)), MAX_CANDIDATES):
             break
     return np.array(out, dtype=np.int64)
 
@@ -487,6 +542,17 @@ def _hue(color):
         if w in HUE:
             return HUE[w]
     return None
+
+
+def color_match(a, b):
+    """Outfit colour fit in [0, 1]: same colour > same shade family > both neutral > colour-wheel harmony."""
+    if a == b:
+        return 1.0
+    if _hue(a) is not None and _hue(a) == _hue(b) or a.split()[-1] == b.split()[-1]:
+        return 0.8
+    if a in NEUTRALS and b in NEUTRALS:
+        return 0.6
+    return 0.5 * color_harmony(a, b)
 
 
 def color_harmony(a, b):
