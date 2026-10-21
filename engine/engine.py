@@ -366,6 +366,13 @@ class SearchEngine:
     def _complement_candidates(self, anchor, concept, comp, page_set, per_pool=12):
         idx = self.index
         mask = idx.concept_strength[concept] >= 0.85
+        if concept == 'bag':
+            # "a bag to go with it" means a handbag-style bag; gym bags, backpacks and bum bags
+            # are not outfit complements unless the shopper asks for them by name.
+            handbag = np.isin(idx.codes['product_type'], [idx.vocab['product_type'][t] for t in
+                              ('bag', 'cross-body bag', 'shoulder bag', 'tote bag') if t in idx.vocab['product_type']])
+            if (mask & handbag).sum() >= 20:
+                mask &= handbag
         anchor_who = {w for w in ('men', 'women', 'kids', 'baby') if idx.who[w][anchor]}
         if comp.who:
             mask &= idx.who[comp.who]
