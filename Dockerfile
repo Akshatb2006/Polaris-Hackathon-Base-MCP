@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# Official Docker image via the AWS ECR Public mirror: Docker Hub rate-limits shared CodeBuild IPs (HTTP 429).
+FROM public.ecr.aws/docker/library/python:3.12-slim
 # MCP_ALLOWED_HOSTS='*': hosting platforms assign the public hostname at deploy time; override to restrict.
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8000 FASTEMBED_CACHE=/app/.models OMP_NUM_THREADS=2 \
     MCP_ALLOWED_HOSTS=*
