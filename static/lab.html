@@ -48,7 +48,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
 .img{aspect-ratio:3/4;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--muted);font:.75rem var(--mono);max-width:100%}
-.img img{width:100%;height:100%;object-fit:cover}
+.img{position:relative}
+.img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.swatch{width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding:12px}
+.sw-type{font:600 1.05rem var(--display)}
+.sw-meta{font:.72rem var(--mono);opacity:.8}
 .body{padding:10px;display:flex;flex-direction:column;gap:4px;font-size:.83rem}
 .name{font-weight:600;font-size:.9rem}
 .row{display:flex;justify-content:space-between;gap:6px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -150,8 +154,39 @@ function bar(s) {
   return `<div class="bars" title="score ${s.score}">${vals.map(([k, v]) => `<span style="width:${(v / total * 100).toFixed(1)}%;background:${color[k]}"></span>`).join('')}</div>`;
 }
 
+// The catalog's image bucket no longer exists, so each card shows a swatch built only from
+// catalog facts: the product's colour, pattern and garment type. A real photo, if it ever
+// loads, is drawn on top of it.
+const COLOR_HEX = {'Black':'#1d1d1f','White':'#f7f7f5','Off White':'#efeadf','Grey':'#8d9093','Dark Grey':'#4b4e52',
+  'Light Grey':'#c7c9cc','Beige':'#cdb894','Light Beige':'#e6d8bd','Dark Beige':'#a68e6b','Greyish Beige':'#b5ab98',
+  'Blue':'#2f6fd0','Dark Blue':'#1f2f5c','Light Blue':'#a9c8ee','Red':'#c8282f','Dark Red':'#7d1d26','Light Red':'#e98a8a',
+  'Pink':'#e46d9d','Light Pink':'#f4c6d4','Dark Pink':'#b7366d','Green':'#3c9a4f','Dark Green':'#1f4d33',
+  'Light Green':'#b4dbb2','Greenish Khaki':'#7b7a4d','Yellow':'#f0cf2e','Light Yellow':'#f6e8a0','Dark Yellow':'#c99b1d',
+  'Orange':'#ec7a25','Light Orange':'#f7b98a','Dark Orange':'#b8521c','Purple':'#7445a8','Light Purple':'#c7b3e3',
+  'Dark Purple':'#47285f','Turquoise':'#2bb3b0','Light Turquoise':'#9fe0dc','Dark Turquoise':'#167a7a',
+  'Yellowish Brown':'#8b5e2b','Gold':'#c9a43b','Silver':'#b9bcc0','Bronze/Copper':'#a86a3d','Transparent':'#e9eef2'};
+function hexFor(color) {
+  if (COLOR_HEX[color]) return COLOR_HEX[color];
+  const base = Object.keys(COLOR_HEX).find(k => color && color.endsWith(k.split(' ').pop()));
+  return base ? COLOR_HEX[base] : '#9aa3a0';
+}
+function swatch(p) {
+  const hex = hexFor(p.color);
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const ink = (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#1d1d1f' : '#f7f7f5';
+  const pat = (p.pattern || '').toLowerCase();
+  const overlay = pat.includes('stripe') ? `repeating-linear-gradient(90deg, transparent 0 14px, ${ink}22 14px 22px)`
+    : pat.includes('check') ? `repeating-linear-gradient(0deg, ${ink}1f 0 10px, transparent 10px 24px), repeating-linear-gradient(90deg, ${ink}1f 0 10px, transparent 10px 24px)`
+    : pat.includes('dot') ? `radial-gradient(${ink}33 3px, transparent 4px) 0 0 / 18px 18px`
+    : pat.includes('denim') || pat.includes('melange') ? `repeating-linear-gradient(45deg, ${ink}14 0 2px, transparent 2px 5px)`
+    : pat.includes('print') || pat.includes('all over') ? `radial-gradient(circle at 30% 35%, ${ink}26 0 18%, transparent 19%), radial-gradient(circle at 70% 65%, ${ink}1f 0 14%, transparent 15%)`
+    : 'none';
+  return `<div class="swatch" style="background:${overlay === 'none' ? '' : overlay + ','}${hex};color:${ink}">
+    <span class="sw-type">${esc(p.product_type)}</span><span class="sw-meta">${esc(p.color)} · ${esc(p.pattern)}</span></div>`;
+}
+
 function card(p, k, score, reason) {
-  return `<article class="card"><div class="img">${p.image_url ? `<img loading="lazy" alt="${esc(p.name)}" src="${esc(p.image_url)}" onerror="this.replaceWith(document.createTextNode('no image'))">` : 'no image'}</div>
+  return `<article class="card"><div class="img">${swatch(p)}${p.image_url ? `<img loading="lazy" alt="${esc(p.name)}" src="${esc(p.image_url)}" onerror="this.remove()">` : ''}</div>
     <div class="body"><div class="rank">#${k + 1} · ${esc(p.id)}</div><div class="name">${esc(p.name)}</div>
     <div class="row"><span>${esc(p.product_type)} · ${esc(p.color)}</span><span class="price">₹${p.price.toLocaleString()}</span></div>
     <div class="row"><span>${esc(p.section)}</span><span>${p.rating == null ? 'no reviews' : '★ ' + p.rating + ' (' + p.reviews + ')'}</span></div>
