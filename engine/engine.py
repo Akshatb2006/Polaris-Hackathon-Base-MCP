@@ -21,9 +21,13 @@ FIELD_SORT_CAP = 400
 MAX_CANDIDATES = 10_100      # offset (<= 10000) + limit (<= 100)
 CONCEPT_MIN = 0.75           # evidence needed for a product to count as the requested garment
 CHILD_PRIOR = 0.06           # unqualified requests are usually for adults
+DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
 NAME_REPEAT_PENALTY = 0.06   # per earlier same-name variant; swept 0-0.1 on eval cases, 0.06 keeps relevance
 # Ablation switch for evaluation: hybrid (default), lexical (no dense channel) or dense (no BM25F).
 SEARCH_MODE = os.getenv('SEARCH_MODE', 'hybrid')
+# Experimental, off by default: cross-encoder reordering of the top RERANK_TOP eligible candidates.
+RERANK_MODEL = os.getenv('RERANK_MODEL', '')
+RERANK_TOP, RERANK_WEIGHT = int(os.getenv('RERANK_TOP', '30')), float(os.getenv('RERANK_WEIGHT', '0.5'))
 
 
 class SearchEngine:
@@ -34,6 +38,10 @@ class SearchEngine:
         self.dense = DenseIndex.load(self.products) if dense == 'auto' else dense
         self._cache = OrderedDict()
         self._lock = threading.Lock()
+        self.reranker = None
+        if RERANK_MODEL:
+            from fastembed.rerank.cross_encoder import TextCrossEncoder
+            self.reranker = TextCrossEncoder(RERANK_MODEL, cache_dir=os.getenv('RERANK_CACHE') or None)
 
     # ------------------------------------------------------------------ API
     def search(self, arguments):
@@ -119,6 +127,8 @@ class SearchEngine:
             mask &= idx.color_mask(intent.colors)
         if intent.exclude_colors:
             mask &= ~idx.color_mask(intent.exclude_colors)
+        if intent.brand:
+            mask &= idx.brand_mask(intent.brand)
         for concept in intent.exclude_concepts:
             mask &= idx.concept_strength[concept] < 0.85
         concept_strength = None
@@ -140,10 +150,10 @@ class SearchEngine:
         if not len(cand):
             return cand, np.zeros(0, dtype=np.float32), {}
         parts = {}
-        terms = intent.lexical_terms()
+        terms = intent.lexical_terms() if SEARCH_MODE != 'dense' or self.dense is None else []
         lex = idx.bm25(terms)[cand] if terms else np.zeros(len(cand), dtype=np.float32)
         parts['lexical'] = lex / lex.max() if lex.max() > 0 else lex
-        if self.dense is not None and intent.semantic_text:
+        if self.dense is not None and intent.semantic_text and SEARCH_MODE != 'lexical':
             dense = self.dense.scores(intent.semantic_text)[cand]
             lo = np.percentile(dense, 50) if len(dense) > 20 else dense.min()
             hi = dense.max()
@@ -174,6 +184,8 @@ class SearchEngine:
                  + W_PATTERN * parts['pattern'] + W_OCCASION * parts['occasion'] + w_q * quality)
         if intent.who is None:
             score -= CHILD_PRIOR * idx.who['kids'][cand]
+        for phrase in intent.demote_phrases:
+            score -= DEMOTE_PENALTY * idx.phrase_mask(phrase)[cand]
         if intent.soft_cheap or intent.soft_premium:
             price = idx.price[cand]
             rel = (price - price.min()) / max(price.max() - price.min(), 1)
@@ -196,6 +208,8 @@ class SearchEngine:
         order = np.lexsort((cand, -np.round(score, 9)))
         ranked, ranked_score = cand[order], score[order]
         ranked, ranked_score = self._diversify(ranked, ranked_score)
+        if self.reranker is not None and RERANK_WEIGHT > 0:
+            ranked, ranked_score = self._rerank(intent, ranked, ranked_score)
         if not intent.concepts and self.dense is not None and 'dense_raw' in parts:
             lookup = np.zeros(self.index.n, dtype=np.float32)
             lookup[cand] = parts['dense_raw']
@@ -209,6 +223,22 @@ class SearchEngine:
                          **{name: round(float(vals[pos_in[p]]), 3) for name, vals in parts.items()
                             if name != 'dense_raw'}} for k, p in enumerate(top)]})
         return {'ranked': ranked[:MAX_CANDIDATES], 'score': ranked_score[:MAX_CANDIDATES], 'intent': intent}
+
+    def _rerank(self, intent, ranked, score):
+        """Reorder only the head of an already-filtered list; membership and the tail are unchanged."""
+        from .dense import document_text
+        k = min(RERANK_TOP, len(ranked))
+        if k < 2:
+            return ranked, score
+        head = ranked[:k]
+        with self._lock:
+            ce = np.array(list(self.reranker.rerank(intent.semantic_text,
+                                                    [document_text(self.products[i]) for i in head])), dtype=np.float64)
+        norm = lambda x: (x - x.min()) / max(x.max() - x.min(), 1e-9)
+        mixed = (1 - RERANK_WEIGHT) * norm(score[:k]) + RERANK_WEIGHT * norm(ce)
+        order = np.lexsort((head, -np.round(mixed, 9)))
+        # keep the head's scores in descending order so later thresholds still see a sorted list
+        return np.concatenate([head[order], ranked[k:]]), np.concatenate([np.sort(score[:k])[::-1], score[k:]])
 
     def _diversify(self, ranked, score, window=60):
         """Soften runs of the same product name (colour variants) inside the visible head of the list."""

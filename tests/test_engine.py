@@ -27,6 +27,11 @@ CATALOG = [
     product('009', 'Tea sock', 'Socks', 'Black', 199, 'Trainer socks in a cotton blend.', category='Socks & Tights'),
     product('010', 'Mike tee', 'T-shirt', 'Blue', 599, 'T-shirt in cotton jersey.', audience='Menswear',
             section='Contemporary Casual'),
+    product('011', 'NIKE legging', 'Leggings/Tights', 'Black', 1299, 'Leggings in fast-drying functional fabric.',
+            category='Garment Lower body'),
+    product('012', 'Bridal gown', 'Dress', 'Off White', 4999, 'Long wedding dress in tulle with lace.',
+            category='Garment Full body'),
+    product('013', 'Puffer jacket', 'Jacket', 'Black', 3999, 'Padded jacket in woven fabric, warm and lined.'),
 ]
 
 
@@ -73,6 +78,26 @@ class EngineRules(unittest.TestCase):
 
     def test_audience_from_query_is_hard(self):
         self.assertEqual(self.ids(query='t-shirt for men'), ['010'])
+
+    def test_brand_is_a_hard_requirement(self):
+        self.assertEqual(self.ids(query='nike leggings'), ['011'])
+        self.assertEqual(self.ids(query='nike dress'), [])
+        self.assertEqual(self.ids(query='gucci bag'), [])
+        self.assertTrue(self.ids(query='converse style sneakers'))   # describes a look, not a brand
+
+    def test_wedding_guest_demotes_bridal_gowns(self):
+        got = self.ids(query='wedding guest outfit')
+        self.assertTrue(got)
+        self.assertNotEqual(got[0], '012')
+        self.assertIn('012', self.ids(query='bridal dress'))
+
+    def test_month_implies_season(self):
+        self.assertIn('013', self.ids(query='what to wear in december')[:3])
+
+    def test_occasion_fits_audience(self):
+        got = self.ids(query='date night outfit for him')
+        self.assertTrue(got)
+        self.assertFalse({'001', '002', '003', '012'} & set(got))    # no dresses for him
 
     def test_empty_query_sorts_exactly(self):
         self.assertEqual(self.ids(sort_by='price', sort_order='asc', limit=3), ['009', '005', '010'])

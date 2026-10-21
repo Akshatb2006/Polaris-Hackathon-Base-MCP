@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 
 import numpy as np
 
-from .taxonomy import (CONCEPTS, COLORS, EXPANSIONS, GENERIC_FASHION, OCCASIONS, OUT_OF_DOMAIN,
+from .taxonomy import (BRANDS, CONCEPTS, COLORS, EXPANSIONS, GENERIC_FASHION, OCCASIONS, OUT_OF_DOMAIN,
                        PATTERN_CONCEPTS, PATTERNS, REFINES, STOPWORDS, WHO_WORDS)
 
 STRING_FILTERS = ('category', 'product_type', 'color', 'audience', 'section', 'pattern')
@@ -239,6 +239,25 @@ class CatalogIndex:
             self._color_masks[key] = np.array([c in wanted for c in self.color_values], dtype=bool)
         return self._color_masks[key]
 
+    def phrase_mask(self, phrase):
+        """Products whose name or description contains a phrase (cached; used for soft penalties)."""
+        if not hasattr(self, '_phrase_masks'):
+            self._phrase_masks = {}
+        if phrase not in self._phrase_masks:
+            rx = re.compile(r'(?<![a-z])%s(?![a-z])' % re.escape(phrase))
+            self._phrase_masks[phrase] = np.array(
+                [bool(rx.search(f"{p['name']} {p.get('description') or ''}".casefold())) for p in self.products])
+        return self._phrase_masks[phrase]
+
+    def brand_mask(self, brand):
+        """Products whose *name* carries the brand (brand words in descriptions are not evidence)."""
+        if not hasattr(self, '_brand_masks'):
+            self._brand_masks = {}
+        if brand not in self._brand_masks:
+            rx = re.compile(r"(?<![a-z0-9])(?:%s)(?![a-z0-9])" % '|'.join(re.escape(a) for a in BRANDS[brand]))
+            self._brand_masks[brand] = np.array([bool(rx.search(p['name'].casefold())) for p in self.products])
+        return self._brand_masks[brand]
+
     def pattern_mask(self, catalog_patterns):
         codes = [self.vocab['pattern'][v.casefold()] for v in catalog_patterns if v.casefold() in self.vocab['pattern']]
         return np.isin(self.codes['pattern'], codes)
@@ -298,7 +317,10 @@ class CatalogIndex:
                 lexicon.update(raw_tokens(term))
         lexicon |= GENERIC_FASHION
         self.catalog_freq = dict(freq)
-        self.ood_words = ood_words = {w for phrase in OUT_OF_DOMAIN for w in raw_tokens(phrase)}
+        # out-of-domain words and brand names are recognised as written, never "corrected"
+        self.ood_words = ood_words = {w for phrase in OUT_OF_DOMAIN for w in raw_tokens(phrase)} | {
+            w for aliases in BRANDS.values() for a in aliases for w in raw_tokens(a)
+            if len(w) > 2 and w not in lexicon}   # "gap hoodie" protects "gap", never "hoodie"
         self.lexicon = {w for w in lexicon if w.isalpha() and len(w) >= 3}
         for word in lexicon:
             freq[word] += 500   # shopper vocabulary outranks rare catalog tokens

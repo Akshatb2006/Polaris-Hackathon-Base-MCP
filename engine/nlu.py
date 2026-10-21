@@ -9,9 +9,11 @@ import re
 from dataclasses import dataclass, field
 
 from .index import analyze, name_key, raw_tokens, text_concepts
-from .taxonomy import (CONCEPTS, COLORS, EXPANSIONS, GENERIC_FASHION, MATERIALS, OCCASIONS, OUT_OF_DOMAIN,
+from .taxonomy import (BRANDS, CONCEPTS, COLORS, EXPANSIONS, GENERIC_FASHION, MATERIALS, OCCASIONS, OUT_OF_DOMAIN,
                        PATTERNS, STOPWORDS, WHO_WORDS)
 
+WOMEN_ONLY_CONCEPTS = {'dress', 'skirt', 'heels', 'blouse', 'bra', 'bikini', 'tights', 'leggings'}
+MEN_ONLY_CONCEPTS = {'tie'}
 ACCESSORY_ROLES = {'bag', 'shoes', 'jewellery', 'headwear', 'eyewear', 'neckwear', 'handwear', 'belt', 'hair'}
 NUM = r'(\d+(?:\.\d+)?)'
 CUR = r'\s*(?:(?:rs\.?|inr|₹|rupees?)\s*)?'
@@ -61,6 +63,8 @@ class Intent:
     exclude_patterns: list = field(default_factory=list)
     occasion_concepts: list = field(default_factory=list)
     occasion_weights: dict = field(default_factory=dict)
+    demote_phrases: list = field(default_factory=list)  # soft penalty, e.g. bridal gowns for a wedding guest
+    brand: str = None                                   # hard: product name must carry this brand
     expansion: str = ''
     min_price: float = None
     max_price: float = None
@@ -86,10 +90,10 @@ class Intent:
     def describe(self):
         out = {'text': self.text}
         for key in ('concepts', 'colors', 'exclude_colors', 'exclude_concepts', 'patterns', 'exclude_patterns',
-                    'occasion_concepts'):
+                    'occasion_concepts', 'demote_phrases'):
             if getattr(self, key):
                 out[key] = getattr(self, key)
-        for key in ('min_price', 'max_price', 'min_rating', 'who', 'expansion', 'context'):
+        for key in ('min_price', 'max_price', 'min_rating', 'who', 'expansion', 'context', 'brand'):
             if getattr(self, key) not in (None, ''):
                 out[key] = getattr(self, key)
         for key in ('soft_cheap', 'soft_premium', 'soft_quality'):
@@ -268,6 +272,10 @@ class QueryParser:
         intent.occasion_concepts = occ_concepts
         if occ_text:
             intent.expansion = (intent.expansion + ' ' + ' '.join(occ_text)).strip()
+        # A wedding guest is not the bride: bridal gowns stay findable but rank below guest outfits.
+        if _has(positive, 'wedding') and not re.search(r'\b(?:bride|bridal|my (?:own )?wedding|getting married|wedding dress)', positive):
+            intent.demote_phrases = ['wedding dress', 'bridal', 'bride', 'wedding gown']
+        intent.brand = find_brand(positive)
         intent.who = self._who(positive)
         self._prices(positive, intent)
         rating = RATING_RE.search(positive)
@@ -348,6 +356,10 @@ class QueryParser:
         if plan.complement is not None and plan.complement.min_price is None and plan.complement.max_price is None:
             if each and plan.intents[0].max_price is not None:
                 plan.complement.max_price = plan.intents[0].max_price
+        brands = [i.brand for i in intents if i.brand]
+        if len(set(brands)) == 1:   # "nike shorts and t-shirts": the brand applies to every choice
+            for i in intents:
+                i.brand = i.brand or brands[0]
         whos = {i.who for i in all_intents if i.who}
         if len(whos) == 1:
             shared = whos.pop()
@@ -361,6 +373,8 @@ class QueryParser:
             if any(getattr(i, flag) for i in all_intents):
                 for i in all_intents:
                     setattr(i, flag, True)
+        for i in all_intents:
+            self._fit_occasion_to_audience(i)
         occ = [c for i in intents for c in i.occasion_concepts]
         if occ:
             for i in all_intents:
@@ -374,6 +388,19 @@ class QueryParser:
         head = HEAD_SPLIT_RE.split(text, maxsplit=1)[0]
         words = [w for w in raw_tokens(head) if w not in STOPWORDS and not w.isdigit() and w.isalpha()]
         return words[-1] if words else None
+
+    @staticmethod
+    def _fit_occasion_to_audience(intent):
+        """An occasion suggests different garments for different shoppers ("first date ... for him")."""
+        if intent.who == 'men':
+            drop, words = WOMEN_ONLY_CONCEPTS, ('feminine',)
+        elif intent.who == 'women':
+            drop, words = MEN_ONLY_CONCEPTS, ('masculine',)
+        else:
+            return
+        intent.occasion_concepts = [c for c in intent.occasion_concepts if c not in drop]
+        intent.occasion_weights = {c: w for c, w in intent.occasion_weights.items() if c not in drop}
+        intent.expansion = ' '.join(w for w in intent.expansion.split() if w not in words)
 
     def _judge(self, plan, text, raw):
         """Is this a request the catalog can answer? Returns (shoppable, reason, content_terms)."""
@@ -406,6 +433,24 @@ class QueryParser:
         if len(known) / len(content) >= 0.6:
             return True, 'query words are well attested in the catalog', content
         return False, 'too little catalog evidence for this request', content
+
+
+BRAND_RES = {brand: re.compile(r"(?<![a-z0-9])(?:%s)(?![a-z0-9])" % '|'.join(re.escape(a) for a in sorted(aliases, key=len, reverse=True)))
+             for brand, aliases in BRANDS.items()}
+
+
+STYLE_OF_RE = re.compile(r'^\s*(?:style|inspired|type|look|like|dupe|alternative)\b')
+
+
+def find_brand(text):
+    """A brand the shopper requires; "converse style sneakers" or "like nike" describe a look instead."""
+    for brand, rx in BRAND_RES.items():
+        for m in rx.finditer(text):
+            before, after = text[:m.start()], text[m.end():]
+            if STYLE_OF_RE.match(after) or re.search(r'\b(?:like|similar to|than|not|no|without|non)\s*$', before):
+                continue
+            return brand
+    return None
 
 
 HEAD_SPLIT_RE = re.compile(r'\b(?:for|to|on|at|in|with|near|from|during|that|which|so|because|while|like)\b')

@@ -54,6 +54,7 @@ CONCEPTS = {
                   ['pyjamas', 'pajamas', 'pyjama', 'pajama', 'pjs', 'nightwear', 'sleepwear', 'nightie',
                    'nightgown', 'nightdress', 'robe', 'bathrobe', 'dressing gown', 'sleepsuit', 'loungewear',
                    'sleeping bag', 'sleep bag', 'sleepbag', 'sleeping sack', 'pyjama shorts', 'pyjama bottoms',
+                   'pyjama set', 'pajama set', 'pj set', 'pyjama sets', 'sleep set', 'lounge set',
                    'pyjama top', 'pyjama trousers'], 'night'),
     'bodysuit': (['Bodysuit'], ['bodysuit', 'body', 'onesie', 'romper suit'], 'top'),
     'set': (['Garment Set'], ['set', 'co-ord', 'coord set', 'outfit set', 'tracksuit', 'two-piece'], 'onepiece'),
@@ -265,6 +266,18 @@ OCCASIONS = {
     'birthday': (['dress', 'top', 'shirt'], 'party'),
     'graduation': (['dress', 'suit', 'blazer'], 'elegant formal'),
     'funeral': (['dress', 'suit', 'shirt', 'trousers'], 'black formal'),
+    # months imply a season (northern-hemisphere catalog; "may" is left out: usually a verb)
+    'december': (['coat', 'jacket', 'sweater', 'boots', 'scarf', 'cardigan'], 'warm wool knit lined long-sleeved'),
+    'january': (['coat', 'jacket', 'sweater', 'boots', 'scarf', 'cardigan'], 'warm wool knit lined long-sleeved'),
+    'february': (['coat', 'jacket', 'sweater', 'boots', 'scarf', 'cardigan'], 'warm wool knit lined long-sleeved'),
+    'march': (['jacket', 'cardigan', 'dress', 'top'], 'light layers'),
+    'april': (['jacket', 'cardigan', 'dress', 'top'], 'light airy'),
+    'june': (['dress', 'shorts', 'top', 'tshirt', 'sandals', 'skirt'], 'summer airy lightweight linen'),
+    'july': (['dress', 'shorts', 'top', 'tshirt', 'sandals', 'skirt'], 'summer airy lightweight linen'),
+    'august': (['dress', 'shorts', 'top', 'tshirt', 'sandals', 'skirt'], 'summer airy lightweight linen'),
+    'september': (['jacket', 'sweater', 'cardigan', 'boots'], 'knit light layers'),
+    'october': (['jacket', 'sweater', 'cardigan', 'boots', 'coat'], 'knit warm'),
+    'november': (['coat', 'jacket', 'sweater', 'boots', 'scarf'], 'warm knit lined'),
     # body parts -> what covers or adorns them ("keep my ears warm", "something for my neck")
     'ears': (['hat', 'beanie', 'earrings'], 'beanie hat earflaps knitted'),
     'ear': (['hat', 'beanie', 'earrings'], 'beanie hat earflaps knitted'),
@@ -382,6 +395,32 @@ OUT_OF_DOMAIN = {
     'curtain', 'curtains', 'bill', 'bills', 'electricity', 'toothbrush', 'tooth brush', 'hose', 'venue', 'salon',
     'spa', 'subscription', 'membership', 'appointment', 'reservation', 'saree', 'sari', 'lehenga', 'sherwani', 'kurta', 'kurti',
     'dhoti', 'salwar', 'dupatta', 'turban', 'hijab', 'abaya', 'kimono',
+}
+
+# Third-party brands (canonical -> spellings). The catalog records no brand field; a few product
+# names carry one ("NIKE legging", "ZARA highwaist bikini bottom"). A brand in a request is a hard
+# requirement: only products whose name carries it qualify, so "nike running shoes" is empty while
+# "nike leggings" finds the NIKE leggings. H&M, the catalog's own label, is deliberately absent, and
+# ambiguous words (boss, tommy, mango, lv, ck) are left out so "girl boss tee" stays a normal search.
+BRANDS = {
+    'nike': ['nike'], 'adidas': ['adidas'], 'puma': ['puma'], 'reebok': ['reebok'], 'new balance': ['new balance'],
+    'under armour': ['under armour', 'under armor'], 'asics': ['asics'], 'fila': ['fila'], 'skechers': ['skechers'],
+    'converse': ['converse'], 'vans': ['vans'], 'crocs': ['crocs'], 'birkenstock': ['birkenstock'],
+    'dr martens': ['dr martens', 'doc martens', 'dr. martens'], 'timberland': ['timberland'], 'ugg': ['ugg', 'uggs'],
+    'gucci': ['gucci'], 'prada': ['prada'], 'louis vuitton': ['louis vuitton'], 'chanel': ['chanel'],
+    'dior': ['dior'], 'versace': ['versace'], 'armani': ['armani'], 'balenciaga': ['balenciaga'], 'burberry': ['burberry'],
+    'hermes': ['hermes', 'hermès'], 'fendi': ['fendi'], 'givenchy': ['givenchy'], 'valentino': ['valentino'],
+    'zara': ['zara'], 'uniqlo': ['uniqlo'], 'shein': ['shein'], 'forever 21': ['forever 21', 'forever21'],
+    'levis': ["levi's", 'levis', 'levi'], 'wrangler': ['wrangler'], 'lee': ['lee jeans'], 'calvin klein': ['calvin klein'],
+    'tommy hilfiger': ['tommy hilfiger'], 'ralph lauren': ['ralph lauren', 'polo ralph lauren'], 'lacoste': ['lacoste'],
+    'hugo boss': ['hugo boss'], 'diesel': ['diesel'], 'guess': ['guess jeans'], 'superdry': ['superdry'],
+    'the north face': ['the north face', 'north face'], 'columbia': ['columbia'], 'patagonia': ['patagonia'],
+    'ray-ban': ['ray-ban', 'rayban', 'ray ban'], 'rolex': ['rolex'], 'casio': ['casio'], 'fossil': ['fossil'],
+    'michael kors': ['michael kors'], 'coach': ['coach bag', 'coach handbag'], 'kate spade': ['kate spade'],
+    "victoria's secret": ["victoria's secret", 'victorias secret'], 'gap': ['gap jeans', 'gap hoodie'],
+    'allen solly': ['allen solly'], 'van heusen': ['van heusen'], 'peter england': ['peter england'], 'biba': ['biba'],
+    'fabindia': ['fabindia'], 'manyavar': ['manyavar'], 'w for woman': ['w for woman'], 'bata': ['bata'],
+    'woodland': ['woodland shoes'], 'red tape': ['red tape'], 'roadster': ['roadster'], 'hrx': ['hrx'],
 }
 
 # Fabric and material words: evidence of a fashion request on their own ("something in corduroy").

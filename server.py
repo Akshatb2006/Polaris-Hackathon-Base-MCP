@@ -60,7 +60,8 @@ def warm_up(catalog):
     for sort_by in ('id', 'price', 'rating', 'review_count'):
         for sort_order in ('asc', 'desc'):
             catalog.engine.run({'sort_by': sort_by, 'sort_order': sort_order})
-    for query in ('black jeans and white t-shirts under 2000', 'dress with a matching bag', 'lazy sunday'):
+    for query in ('black jeans and white t-shirts under 2000', 'dress with a matching bag', 'lazy sunday',
+                  'wedding guest outfit'):
         catalog.engine.run({'query': query, 'sort_by': 'price', 'include_recommendations': True})
 
 

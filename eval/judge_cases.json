@@ -1,0 +1,1753 @@
+[
+ {
+  "group": "tops",
+  "split": "dev",
+  "kind": "single",
+  "query": "linen shirt for men",
+  "expect": {
+   "types": [
+    "Shirt"
+   ],
+   "prefer": [
+    "linen"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "tops",
+  "split": "dev",
+  "kind": "single",
+  "query": "striped long sleeve t-shirt",
+  "expect": {
+   "types": [
+    "T-shirt",
+    "Top"
+   ],
+   "prefer": [
+    [
+     "stripe"
+    ],
+    "long-sleeved"
+   ]
+  }
+ },
+ {
+  "group": "tops",
+  "split": "dev",
+  "kind": "single",
+  "query": "turtleneck sweater",
+  "expect": {
+   "types": [
+    "Sweater"
+   ],
+   "prefer": [
+    [
+     "polo-neck",
+     "turtleneck",
+     "polo neck"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "tops",
+  "split": "dev",
+  "kind": "single",
+  "query": "oversized grey hoodie",
+  "expect": {
+   "types": [
+    "Hoodie"
+   ],
+   "also": [
+    "Sweater"
+   ],
+   "colors": [
+    "Grey",
+    "Dark Grey",
+    "Light Grey"
+   ],
+   "prefer": [
+    [
+     "oversized",
+     "loose"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "bottoms",
+  "split": "heldout",
+  "kind": "single",
+  "query": "high waisted wide leg jeans",
+  "expect": {
+   "words": [
+    "jeans"
+   ],
+   "also": [
+    "Trousers"
+   ],
+   "prefer": [
+    [
+     "high waist",
+     "high-waisted"
+    ],
+    "wide"
+   ]
+  }
+ },
+ {
+  "group": "bottoms",
+  "split": "heldout",
+  "kind": "single",
+  "query": "mens slim fit chinos",
+  "expect": {
+   "words": [
+    "chinos"
+   ],
+   "also": [
+    "Trousers"
+   ],
+   "prefer": [
+    "slim"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "bottoms",
+  "split": "heldout",
+  "kind": "single",
+  "query": "pleated mini skirt",
+  "expect": {
+   "types": [
+    "Skirt"
+   ],
+   "prefer": [
+    "pleat",
+    [
+     "short",
+     "mini"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "bottoms",
+  "split": "heldout",
+  "kind": "single",
+  "query": "running shorts",
+  "expect": {
+   "types": [
+    "Shorts"
+   ],
+   "prefer": [
+    [
+     "sports",
+     "running",
+     "fast-drying",
+     "functional"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "dresses",
+  "split": "dev",
+  "kind": "single",
+  "query": "floral midi dress",
+  "expect": {
+   "types": [
+    "Dress"
+   ],
+   "words": [
+    "dress"
+   ],
+   "prefer": [
+    [
+     "floral",
+     "flower",
+     "patterned",
+     "print"
+    ],
+    [
+     "calf-length",
+     "midi"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "dresses",
+  "split": "dev",
+  "kind": "single",
+  "query": "satin slip dress",
+  "expect": {
+   "types": [
+    "Dress"
+   ],
+   "words": [
+    "dress"
+   ],
+   "prefer": [
+    "satin",
+    [
+     "strap",
+     "slip"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "dresses",
+  "split": "dev",
+  "kind": "single",
+  "query": "green summer dress under 2000",
+  "expect": {
+   "types": [
+    "Dress"
+   ],
+   "words": [
+    "dress"
+   ],
+   "colors": [
+    "Green",
+    "Dark Green",
+    "Light Green",
+    "Other Green",
+    "Greenish Khaki"
+   ],
+   "max_price": 2000,
+   "prefer": [
+    [
+     "airy",
+     "sleeveless",
+     "short",
+     "linen",
+     "cotton",
+     "strap"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "dresses",
+  "split": "dev",
+  "kind": "single",
+  "query": "baby girl dress",
+  "expect": {
+   "types": [
+    "Dress"
+   ],
+   "words": [
+    "dress"
+   ],
+   "audiences": [
+    "Baby Sizes 50-98"
+   ],
+   "sections": [
+    "Baby Girl"
+   ]
+  }
+ },
+ {
+  "group": "outerwear",
+  "split": "heldout",
+  "kind": "single",
+  "query": "padded winter jacket for women",
+  "expect": {
+   "types": [
+    "Jacket",
+    "Coat"
+   ],
+   "prefer": [
+    [
+     "padded",
+     "puffer",
+     "quilted"
+    ],
+    [
+     "warm",
+     "lined"
+    ]
+   ],
+   "audiences": [
+    "Ladieswear",
+    "Ladies Accessories",
+    "Lingeries/Tights",
+    "Divided"
+   ],
+   "sections": [
+    "Ladies H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "outerwear",
+  "split": "heldout",
+  "kind": "single",
+  "query": "beige trench coat",
+  "expect": {
+   "types": [
+    "Coat"
+   ],
+   "also": [
+    "Jacket"
+   ],
+   "colors": [
+    "Beige",
+    "Light Beige",
+    "Dark Beige",
+    "Greyish Beige"
+   ],
+   "prefer": [
+    [
+     "trench",
+     "double-breasted",
+     "belt"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "outerwear",
+  "split": "heldout",
+  "kind": "single",
+  "query": "denim jacket",
+  "expect": {
+   "types": [
+    "Jacket"
+   ],
+   "prefer": [
+    "denim"
+   ]
+  }
+ },
+ {
+  "group": "outerwear",
+  "split": "heldout",
+  "kind": "single",
+  "query": "kids rain jacket",
+  "expect": {
+   "types": [
+    "Jacket",
+    "Coat",
+    "Outdoor overall"
+   ],
+   "prefer": [
+    [
+     "water-repellent",
+     "waterproof",
+     "rain"
+    ]
+   ],
+   "audiences": [
+    "Children Sizes 92-140",
+    "Children Sizes 134-170",
+    "Children Accessories, Swimwear",
+    "Baby Sizes 50-98"
+   ],
+   "sections": [
+    "Kids Sports"
+   ]
+  }
+ },
+ {
+  "group": "knit-and-tailoring",
+  "split": "dev",
+  "kind": "single",
+  "query": "chunky knit cardigan",
+  "expect": {
+   "types": [
+    "Cardigan"
+   ],
+   "prefer": [
+    [
+     "chunky",
+     "knit"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "knit-and-tailoring",
+  "split": "dev",
+  "kind": "single",
+  "query": "black blazer for women",
+  "expect": {
+   "types": [
+    "Blazer"
+   ],
+   "colors": [
+    "Black"
+   ],
+   "audiences": [
+    "Ladieswear",
+    "Ladies Accessories",
+    "Lingeries/Tights",
+    "Divided"
+   ],
+   "sections": [
+    "Ladies H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "shoes",
+  "split": "heldout",
+  "kind": "single",
+  "query": "black leather ankle boots",
+  "expect": {
+   "types": [
+    "Boots",
+    "Bootie"
+   ],
+   "colors": [
+    "Black"
+   ],
+   "prefer": [
+    "leather",
+    [
+     "ankle",
+     "short"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "shoes",
+  "split": "heldout",
+  "kind": "single",
+  "query": "white sneakers for men under 3000",
+  "expect": {
+   "types": [
+    "Sneakers"
+   ],
+   "colors": [
+    "White",
+    "Off White"
+   ],
+   "max_price": 3000,
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "accessories",
+  "split": "dev",
+  "kind": "single",
+  "query": "gold hoop earrings",
+  "expect": {
+   "types": [
+    "Earring",
+    "Earrings"
+   ],
+   "colors": [
+    "Gold"
+   ],
+   "prefer": [
+    "hoop"
+   ]
+  }
+ },
+ {
+  "group": "accessories",
+  "split": "dev",
+  "kind": "single",
+  "query": "wool scarf",
+  "expect": {
+   "types": [
+    "Scarf"
+   ],
+   "prefer": [
+    "wool"
+   ]
+  }
+ },
+ {
+  "group": "accessories",
+  "split": "dev",
+  "kind": "single",
+  "query": "leather belt for men",
+  "expect": {
+   "types": [
+    "Belt"
+   ],
+   "prefer": [
+    "leather"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "accessories",
+  "split": "dev",
+  "kind": "single",
+  "query": "crossbody bag black",
+  "expect": {
+   "types": [
+    "Bag",
+    "Weekend/Gym bag",
+    "Backpack",
+    "Cross-body bag",
+    "Tote bag",
+    "Shoulder bag",
+    "Bumbag"
+   ],
+   "colors": [
+    "Black"
+   ],
+   "prefer": [
+    [
+     "shoulder strap",
+     "crossbody",
+     "cross-body",
+     "narrow strap"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "accessories-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "bucket hat",
+  "expect": {
+   "types": [
+    "Hat/brim",
+    "Bucket hat",
+    "Hat/beanie"
+   ],
+   "prefer": [
+    "bucket"
+   ]
+  }
+ },
+ {
+  "group": "accessories-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "silver necklace",
+  "expect": {
+   "types": [
+    "Necklace"
+   ],
+   "colors": [
+    "Silver"
+   ]
+  }
+ },
+ {
+  "group": "intimates-and-sleep",
+  "split": "dev",
+  "kind": "single",
+  "query": "cotton pyjama set",
+  "expect": {
+   "types": [
+    "Pyjama set"
+   ],
+   "words": [
+    "pyjama"
+   ],
+   "also": [
+    "Pyjama bottom",
+    "Pyjama jumpsuit/playsuit"
+   ],
+   "prefer": [
+    "cotton"
+   ]
+  }
+ },
+ {
+  "group": "intimates-and-sleep",
+  "split": "dev",
+  "kind": "single",
+  "query": "red lace bra",
+  "expect": {
+   "types": [
+    "Bra"
+   ],
+   "colors": [
+    "Red",
+    "Dark Red",
+    "Light Red",
+    "Other Red"
+   ],
+   "prefer": [
+    "lace"
+   ]
+  }
+ },
+ {
+  "group": "sport-and-swim",
+  "split": "heldout",
+  "kind": "single",
+  "query": "sports bra high support",
+  "expect": {
+   "types": [
+    "Bra"
+   ],
+   "prefer": [
+    [
+     "sports",
+     "sport"
+    ],
+    [
+     "high support",
+     "firm support",
+     "maximum support"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "sport-and-swim",
+  "split": "heldout",
+  "kind": "single",
+  "query": "swim shorts for men",
+  "expect": {
+   "types": [
+    "Swimwear bottom",
+    "Shorts"
+   ],
+   "prefer": [
+    "swim"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "typos",
+  "split": "dev",
+  "kind": "single",
+  "query": "sneekers for women",
+  "expect": {
+   "types": [
+    "Sneakers"
+   ],
+   "audiences": [
+    "Ladieswear",
+    "Ladies Accessories",
+    "Lingeries/Tights",
+    "Divided"
+   ],
+   "sections": [
+    "Ladies H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "typos",
+  "split": "dev",
+  "kind": "single",
+  "query": "blak hodie",
+  "expect": {
+   "types": [
+    "Hoodie"
+   ],
+   "also": [
+    "Sweater"
+   ],
+   "colors": [
+    "Black"
+   ]
+  }
+ },
+ {
+  "group": "typos",
+  "split": "dev",
+  "kind": "single",
+  "query": "leopard prnt skirt",
+  "expect": {
+   "types": [
+    "Skirt"
+   ],
+   "prefer": [
+    [
+     "leopard",
+     "animal",
+     "print"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "typos-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "trosers for office",
+  "expect": {
+   "types": [
+    "Trousers"
+   ],
+   "prefer": [
+    [
+     "tailored",
+     "woven",
+     "suit",
+     "crease"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "typos-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "swetar for kids",
+  "expect": {
+   "types": [
+    "Sweater",
+    "Cardigan"
+   ],
+   "audiences": [
+    "Children Sizes 92-140",
+    "Children Sizes 134-170",
+    "Children Accessories, Swimwear",
+    "Baby Sizes 50-98"
+   ],
+   "sections": [
+    "Kids Sports"
+   ]
+  }
+ },
+ {
+  "group": "budgets",
+  "split": "dev",
+  "kind": "single",
+  "query": "jeans between 1000 and 2000",
+  "expect": {
+   "words": [
+    "jeans"
+   ],
+   "also": [
+    "Trousers"
+   ],
+   "min_price": 1000,
+   "max_price": 2000
+  }
+ },
+ {
+  "group": "budgets",
+  "split": "dev",
+  "kind": "single",
+  "query": "cheap t-shirts under rs 500",
+  "expect": {
+   "types": [
+    "T-shirt"
+   ],
+   "max_price": 500
+  }
+ },
+ {
+  "group": "budgets-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "blue shirt below 1500",
+  "expect": {
+   "types": [
+    "Shirt"
+   ],
+   "colors": [
+    "Blue",
+    "Dark Blue",
+    "Light Blue",
+    "Other Blue"
+   ],
+   "max_price": 1500
+  }
+ },
+ {
+  "group": "budgets-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "dress around 2000",
+  "expect": {
+   "types": [
+    "Dress"
+   ],
+   "words": [
+    "dress"
+   ],
+   "min_price": 1500,
+   "max_price": 2500
+  }
+ },
+ {
+  "group": "weddings",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "wedding guest outfit",
+  "expect": {
+   "types": [
+    "Dress",
+    "Jumpsuit/Playsuit",
+    "Blazer",
+    "Blouse",
+    "Skirt"
+   ],
+   "prefer": [
+    [
+     "satin",
+     "chiffon",
+     "lace",
+     "sequin",
+     "elegant",
+     "draping",
+     "pleat",
+     "velvet",
+     "velour"
+    ]
+   ],
+   "avoid": [
+    "wedding dress",
+    "bridal",
+    "bride"
+   ]
+  }
+ },
+ {
+  "group": "weddings",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "what to wear to a wedding in december",
+  "expect": {
+   "types": [
+    "Dress",
+    "Jumpsuit/Playsuit",
+    "Blazer",
+    "Coat",
+    "Jacket"
+   ],
+   "prefer": [
+    [
+     "long-sleeved",
+     "velvet",
+     "velour",
+     "wool",
+     "lined",
+     "satin"
+    ]
+   ],
+   "avoid": [
+    "wedding dress",
+    "bridal",
+    "bride"
+   ]
+  }
+ },
+ {
+  "group": "weddings",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "summer wedding in goa",
+  "expect": {
+   "types": [
+    "Dress",
+    "Jumpsuit/Playsuit",
+    "Shirt",
+    "Skirt",
+    "Blouse"
+   ],
+   "prefer": [
+    [
+     "airy",
+     "linen",
+     "chiffon",
+     "light",
+     "cotton"
+    ]
+   ],
+   "avoid": [
+    "wedding dress",
+    "bridal",
+    "bride"
+   ]
+  }
+ },
+ {
+  "group": "comfort-and-weather",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "something comfortable for a lazy sunday",
+  "expect": {
+   "types": [
+    "Trousers",
+    "Hoodie",
+    "Sweater",
+    "Pyjama set",
+    "Pyjama bottom",
+    "Shorts",
+    "T-shirt"
+   ],
+   "prefer": [
+    [
+     "soft",
+     "relaxed",
+     "sweatshirt",
+     "jersey",
+     "loose"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "comfort-and-weather",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "i am always cold at the office",
+  "expect": {
+   "types": [
+    "Sweater",
+    "Cardigan",
+    "Blazer",
+    "Jacket",
+    "Coat",
+    "Scarf"
+   ],
+   "prefer": [
+    [
+     "wool",
+     "knit",
+     "warm",
+     "fleece",
+     "lined"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "comfort-and-weather",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "something to keep my ears warm",
+  "expect": {
+   "types": [
+    "Hat/beanie",
+    "Beanie",
+    "Hat/brim"
+   ],
+   "prefer": [
+    [
+     "knit",
+     "warm",
+     "fleece",
+     "wool",
+     "lined"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "comfort-and-weather",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "what can my toddler wear in the snow",
+  "expect": {
+   "types": [
+    "Jacket",
+    "Outdoor overall",
+    "Boots",
+    "Gloves",
+    "Hat/beanie",
+    "Coat",
+    "Outdoor trousers"
+   ],
+   "prefer": [
+    [
+     "padded",
+     "warm",
+     "lined",
+     "water-repellent"
+    ]
+   ],
+   "audiences": [
+    "Children Sizes 92-140",
+    "Children Sizes 134-170",
+    "Children Accessories, Swimwear",
+    "Baby Sizes 50-98"
+   ],
+   "sections": [
+    "Kids Sports"
+   ]
+  }
+ },
+ {
+  "group": "comfort-and-weather",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "clothes for hiking in the rain",
+  "expect": {
+   "types": [
+    "Jacket",
+    "Outdoor trousers",
+    "Boots",
+    "Coat",
+    "Outdoor Waistcoat"
+   ],
+   "prefer": [
+    [
+     "water-repellent",
+     "waterproof",
+     "windproof",
+     "functional"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "work-and-dates",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "outfit for a job interview",
+  "expect": {
+   "types": [
+    "Blazer",
+    "Shirt",
+    "Trousers",
+    "Blouse",
+    "Skirt",
+    "Dress"
+   ],
+   "prefer": [
+    [
+     "tailored",
+     "woven",
+     "smart",
+     "suit"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "work-and-dates",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "first date outfit for him",
+  "expect": {
+   "types": [
+    "Shirt",
+    "Blazer",
+    "Trousers",
+    "Sweater",
+    "Polo shirt"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "work-and-dates",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "work from home but still look presentable",
+  "expect": {
+   "types": [
+    "Shirt",
+    "Blouse",
+    "Sweater",
+    "Cardigan",
+    "Top",
+    "Trousers"
+   ],
+   "prefer": [
+    [
+     "soft",
+     "relaxed",
+     "knit",
+     "jersey"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "holidays-and-parties",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "what should i pack for a beach holiday",
+  "expect": {
+   "types": [
+    "Swimsuit",
+    "Bikini top",
+    "Swimwear bottom",
+    "Swimwear set",
+    "Swimwear top",
+    "Sarong",
+    "Shorts",
+    "Sandals",
+    "Flip flop",
+    "Dress",
+    "Sunglasses",
+    "Hat/brim"
+   ],
+   "prefer": [
+    [
+     "beach",
+     "swim",
+     "airy",
+     "linen",
+     "summer"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "holidays-and-parties",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "something sparkly for a new years eve party",
+  "expect": {
+   "types": [
+    "Dress",
+    "Top",
+    "Skirt",
+    "Blouse",
+    "Jumpsuit/Playsuit"
+   ],
+   "prefer": [
+    [
+     "sequin",
+     "glitter",
+     "metallic",
+     "shimmer",
+     "lurex"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "holidays-and-parties",
+  "split": "heldout",
+  "kind": "unusual",
+  "query": "90s grunge look",
+  "expect": {
+   "types": [
+    "Shirt",
+    "T-shirt",
+    "Trousers",
+    "Jacket",
+    "Dress",
+    "Boots",
+    "Top",
+    "Sweater"
+   ],
+   "prefer": [
+    [
+     "check",
+     "flannel",
+     "oversized",
+     "washed",
+     "90s",
+     "grunge",
+     "distressed"
+    ]
+   ]
+  }
+ },
+ {
+  "group": "gym",
+  "split": "dev",
+  "kind": "unusual",
+  "query": "gym clothes for women",
+  "expect": {
+   "types": [
+    "Leggings/Tights",
+    "Bra",
+    "Top",
+    "Shorts",
+    "T-shirt",
+    "Vest top"
+   ],
+   "prefer": [
+    [
+     "sports",
+     "functional",
+     "fast-drying",
+     "training"
+    ]
+   ],
+   "audiences": [
+    "Ladieswear",
+    "Ladies Accessories",
+    "Lingeries/Tights",
+    "Divided"
+   ],
+   "sections": [
+    "Ladies H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "brands-and-attributes",
+  "split": "dev",
+  "kind": "empty",
+  "query": "nike running shoes"
+ },
+ {
+  "group": "brands-and-attributes",
+  "split": "dev",
+  "kind": "empty",
+  "query": "gucci handbag"
+ },
+ {
+  "group": "brands-and-attributes",
+  "split": "dev",
+  "kind": "empty",
+  "query": "waterproof smartwatch"
+ },
+ {
+  "group": "brands-and-attributes",
+  "split": "dev",
+  "kind": "empty",
+  "query": "jeans under 500 and over 3000"
+ },
+ {
+  "group": "brands-and-attributes-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "levis 501 jeans"
+ },
+ {
+  "group": "brands-and-attributes-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "zara dress"
+ },
+ {
+  "group": "brands-and-attributes-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "adidas tracksuit"
+ },
+ {
+  "group": "brands-and-attributes-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "dress under 50 rupees"
+ },
+ {
+  "group": "brands-and-attributes-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "silk saree for a wedding"
+ },
+ {
+  "group": "off-topic",
+  "split": "dev",
+  "kind": "empty",
+  "query": "best laptop for coding"
+ },
+ {
+  "group": "off-topic",
+  "split": "dev",
+  "kind": "empty",
+  "query": "how to bake a cake"
+ },
+ {
+  "group": "off-topic-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "book me a flight to dubai"
+ },
+ {
+  "group": "off-topic-2",
+  "split": "heldout",
+  "kind": "empty",
+  "query": "what is the capital of france"
+ },
+ {
+  "group": "mixed",
+  "split": "dev",
+  "kind": "mixed",
+  "query": "black jeans and a white shirt",
+  "choices": [
+   {
+    "words": [
+     "jeans"
+    ],
+    "also": [
+     "Trousers"
+    ],
+    "colors": [
+     "Black"
+    ]
+   },
+   {
+    "types": [
+     "Shirt",
+     "Blouse"
+    ],
+    "colors": [
+     "White",
+     "Off White"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "mixed",
+  "split": "dev",
+  "kind": "mixed",
+  "query": "a red dress and gold earrings",
+  "choices": [
+   {
+    "types": [
+     "Dress"
+    ],
+    "words": [
+     "dress"
+    ],
+    "colors": [
+     "Red",
+     "Dark Red",
+     "Light Red",
+     "Other Red"
+    ]
+   },
+   {
+    "types": [
+     "Earring",
+     "Earrings"
+    ],
+    "colors": [
+     "Gold"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "mixed",
+  "split": "dev",
+  "kind": "mixed",
+  "query": "blazer and trousers for the office under 3000 each",
+  "choices": [
+   {
+    "types": [
+     "Blazer"
+    ],
+    "max_price": 3000
+   },
+   {
+    "types": [
+     "Trousers"
+    ],
+    "max_price": 3000
+   }
+  ]
+ },
+ {
+  "group": "mixed",
+  "split": "dev",
+  "kind": "mixed",
+  "query": "winter coat and boots for women",
+  "choices": [
+   {
+    "types": [
+     "Coat",
+     "Jacket"
+    ],
+    "audiences": [
+     "Ladieswear",
+     "Ladies Accessories",
+     "Lingeries/Tights",
+     "Divided"
+    ],
+    "sections": [
+     "Ladies H&M Sport"
+    ]
+   },
+   {
+    "types": [
+     "Boots",
+     "Bootie"
+    ],
+    "audiences": [
+     "Ladieswear",
+     "Ladies Accessories",
+     "Lingeries/Tights",
+     "Divided"
+    ],
+    "sections": [
+     "Ladies H&M Sport"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "mixed-2",
+  "split": "heldout",
+  "kind": "mixed",
+  "query": "sneakers or sandals for summer",
+  "choices": [
+   {
+    "types": [
+     "Sneakers"
+    ]
+   },
+   {
+    "types": [
+     "Sandals",
+     "Heeled sandals",
+     "Flip flop"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "mixed-2",
+  "split": "heldout",
+  "kind": "mixed",
+  "query": "hoodie, joggers and a cap for my son",
+  "choices": [
+   {
+    "types": [
+     "Hoodie",
+     "Sweater"
+    ],
+    "audiences": [
+     "Children Sizes 92-140",
+     "Children Sizes 134-170",
+     "Children Accessories, Swimwear",
+     "Baby Sizes 50-98"
+    ],
+    "sections": [
+     "Kids Sports"
+    ]
+   },
+   {
+    "types": [
+     "Trousers"
+    ],
+    "words": [
+     "joggers"
+    ],
+    "audiences": [
+     "Children Sizes 92-140",
+     "Children Sizes 134-170",
+     "Children Accessories, Swimwear",
+     "Baby Sizes 50-98"
+    ],
+    "sections": [
+     "Kids Sports"
+    ]
+   },
+   {
+    "types": [
+     "Cap/peaked",
+     "Cap",
+     "Hat/beanie",
+     "Hat/brim"
+    ],
+    "audiences": [
+     "Children Sizes 92-140",
+     "Children Sizes 134-170",
+     "Children Accessories, Swimwear",
+     "Baby Sizes 50-98"
+    ],
+    "sections": [
+     "Kids Sports"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "mixed-2",
+  "split": "heldout",
+  "kind": "mixed",
+  "query": "bikini and a beach cover up",
+  "choices": [
+   {
+    "types": [
+     "Bikini top",
+     "Swimwear bottom",
+     "Swimwear set"
+    ]
+   },
+   {
+    "types": [
+     "Sarong"
+    ],
+    "words": [
+     "kaftan",
+     "cover-up",
+     "beach"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "mixed-2",
+  "split": "heldout",
+  "kind": "mixed",
+  "query": "navy polo shirt or a white t-shirt for men",
+  "choices": [
+   {
+    "types": [
+     "Polo shirt"
+    ],
+    "colors": [
+     "Dark Blue"
+    ],
+    "audiences": [
+     "Menswear"
+    ],
+    "sections": [
+     "Men H&M Sport"
+    ]
+   },
+   {
+    "types": [
+     "T-shirt"
+    ],
+    "colors": [
+     "White",
+     "Off White"
+    ],
+    "audiences": [
+     "Menswear"
+    ],
+    "sections": [
+     "Men H&M Sport"
+    ]
+   }
+  ]
+ },
+ {
+  "group": "recs",
+  "split": "dev",
+  "kind": "recs",
+  "query": "a dress for dinner under 2000 with a matching bag under 1000",
+  "args": {
+   "include_recommendations": true
+  },
+  "expect": {
+   "types": [
+    "Dress"
+   ],
+   "words": [
+    "dress"
+   ],
+   "max_price": 2000
+  },
+  "rec_expect": {
+   "types": [
+    "Bag",
+    "Weekend/Gym bag",
+    "Backpack",
+    "Cross-body bag",
+    "Tote bag",
+    "Shoulder bag",
+    "Bumbag"
+   ],
+   "max_price": 1000
+  }
+ },
+ {
+  "group": "recs",
+  "split": "dev",
+  "kind": "recs",
+  "query": "mens jeans",
+  "args": {
+   "include_recommendations": true
+  },
+  "expect": {
+   "words": [
+    "jeans"
+   ],
+   "also": [
+    "Trousers"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  },
+  "rec_expect": {
+   "types": [
+    "T-shirt",
+    "Shirt",
+    "Sneakers",
+    "Belt",
+    "Top",
+    "Polo shirt",
+    "Sweater",
+    "Hoodie"
+   ],
+   "audiences": [
+    "Menswear"
+   ],
+   "sections": [
+    "Men H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "recs-2",
+  "split": "heldout",
+  "kind": "recs",
+  "query": "winter coat for women",
+  "args": {
+   "include_recommendations": true
+  },
+  "expect": {
+   "types": [
+    "Coat",
+    "Jacket"
+   ],
+   "audiences": [
+    "Ladieswear",
+    "Ladies Accessories",
+    "Lingeries/Tights",
+    "Divided"
+   ],
+   "sections": [
+    "Ladies H&M Sport"
+   ]
+  },
+  "rec_expect": {
+   "types": [
+    "Scarf",
+    "Gloves",
+    "Hat/beanie",
+    "Beanie",
+    "Boots",
+    "Bootie"
+   ],
+   "audiences": [
+    "Ladieswear",
+    "Ladies Accessories",
+    "Lingeries/Tights",
+    "Divided"
+   ],
+   "sections": [
+    "Ladies H&M Sport"
+   ]
+  }
+ },
+ {
+  "group": "recs-2",
+  "split": "heldout",
+  "kind": "recs",
+  "query": "black suit with matching shoes",
+  "args": {
+   "include_recommendations": true
+  },
+  "expect": {
+   "types": [
+    "Blazer",
+    "Trousers"
+   ],
+   "words": [
+    "suit"
+   ]
+  },
+  "rec_expect": {
+   "types": [
+    "Sneakers",
+    "Boots",
+    "Bootie",
+    "Sandals",
+    "Heeled sandals",
+    "Flip flop",
+    "Wedge",
+    "Pumps",
+    "Heels",
+    "Ballerinas",
+    "Flat shoe",
+    "Flat shoes",
+    "Moccasins",
+    "Other shoe"
+   ]
+  }
+ },
+ {
+  "group": "names",
+  "split": "dev",
+  "kind": "single",
+  "query": "Moccasin 2 p",
+  "expect": {
+   "name": "Moccasin 2 p",
+   "type": "Slippers"
+  }
+ },
+ {
+  "group": "names",
+  "split": "dev",
+  "kind": "single",
+  "query": "GP Goja",
+  "expect": {
+   "name": "GP Goja",
+   "type": "Trousers"
+  }
+ },
+ {
+  "group": "names",
+  "split": "dev",
+  "kind": "single",
+  "query": "Phoebe velour PJ (J)",
+  "expect": {
+   "name": "Phoebe velour PJ (J)",
+   "type": "Pyjama set"
+  }
+ },
+ {
+  "group": "names-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "Mary Kate L/S",
+  "expect": {
+   "name": "Mary Kate L/S",
+   "type": "T-shirt"
+  }
+ },
+ {
+  "group": "names-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "ANGELICA S.0",
+  "expect": {
+   "name": "ANGELICA S.0",
+   "type": "Shirt"
+  }
+ },
+ {
+  "group": "names-2",
+  "split": "heldout",
+  "kind": "single",
+  "query": "Tigra knitted  Chinille",
+  "expect": {
+   "name": "Tigra knitted  Chinille",
+   "type": "Other accessories"
+  }
+ }
+]
