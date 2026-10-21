@@ -266,6 +266,8 @@ OCCASIONS = {
     'birthday': (['dress', 'top', 'shirt'], 'party'),
     'graduation': (['dress', 'suit', 'blazer'], 'elegant formal'),
     'funeral': (['dress', 'suit', 'shirt', 'trousers'], 'black formal'),
+    'layer': (['cardigan', 'jacket', 'blazer', 'waistcoat', 'sweater'], 'cardigan jacket layer over'),
+    'layering': (['cardigan', 'jacket', 'blazer', 'waistcoat', 'sweater'], 'cardigan jacket layer over'),
     # months imply a season (northern-hemisphere catalog; "may" is left out: usually a verb)
     'december': (['coat', 'jacket', 'sweater', 'boots', 'scarf', 'cardigan'], 'warm wool knit lined long-sleeved'),
     'january': (['coat', 'jacket', 'sweater', 'boots', 'scarf', 'cardigan'], 'warm wool knit lined long-sleeved'),

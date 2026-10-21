@@ -37,7 +37,11 @@ COMPLEMENT_MARK = re.compile(
 COMPLEMENT_GENERIC = re.compile(r'\b(?:complete the look|accessori[sz]e(?: it)?|style it with|'
                                 r'and accessories to match|with accessories)\b')
 CONTEXT_RE = re.compile(r'\b(?:to go with|to wear with|to match(?: with)?|that goes with|that go with|'
-                        r'that match(?:es)?|to pair with|which goes with|for my|to complement)\b')
+                        r'that match(?:es)?|to pair with|which goes with|for my|to complement|'
+                        r'(?:to wear |to go |to put )?(?:over|on top of|under|underneath|beneath) my)\b')
+IMPERATIVE_RE = re.compile(r'^\s*(?:calculate|compute|write|code|program|explain|translate|summari[sz]e|define|solve|'
+                           r'repair|fix|install|debug|convert|generate|draw|sing|play|cook|bake|book|reserve|'
+                           r'schedule|calculate|predict|measure|compare prices of|tell me)\b')
 SPLIT_RE = re.compile(r'\s*(?:,|;|\band also\b|\band\b|\bor\b|&|\bplus\b|\bas well as\b|\balong with\b|/)\s*')
 SOFT_CHEAP = re.compile(r'\b(?:cheap|cheapest|affordable|inexpensive|budget|economical|low[- ]cost|bargain|value)\b')
 SOFT_PREMIUM = re.compile(r'\b(?:premium|luxury|luxurious|expensive|high[- ]end|designer|fancy|upscale)\b')
@@ -243,7 +247,8 @@ class QueryParser:
         parts = CONTEXT_RE.split(positive, maxsplit=1)
         main, context = (parts[0], parts[1]) if len(parts) > 1 else (positive, '')
         concepts_main = self._concepts(main)
-        concepts_all = concepts_main or self._concepts(positive)
+        # "a layer to wear over my shirt": the shirt is context, not what is wanted
+        concepts_all = concepts_main or ([] if context.strip() else self._concepts(positive))
         if concepts_all:
             head = concepts_all[-1]
             # Keep sibling concepts named in the same breath ("hoodie or sweatshirt" handled by split).
@@ -347,15 +352,14 @@ class QueryParser:
         intents = plan.intents
         all_intents = intents + ([plan.complement] if plan.complement else [])
         each = bool(EACH_RE.search(full_text))
-        budgets = [(i.min_price, i.max_price) for i in intents if i.min_price is not None or i.max_price is not None]
-        if budgets and (len(budgets) == 1 or each):
-            lo, hi = budgets[-1]
-            for i in intents:
+        # Budgets are per item: one stated budget applies to every item, primary or accompanying,
+        # unless an item was given its own ("a dress under 2000 with a bag under 1000").
+        budgets = {(i.min_price, i.max_price) for i in all_intents if i.min_price is not None or i.max_price is not None}
+        if len(budgets) == 1 or (budgets and each):
+            lo, hi = sorted(budgets)[-1]
+            for i in all_intents:
                 if i.min_price is None and i.max_price is None:
                     i.min_price, i.max_price = lo, hi
-        if plan.complement is not None and plan.complement.min_price is None and plan.complement.max_price is None:
-            if each and plan.intents[0].max_price is not None:
-                plan.complement.max_price = plan.intents[0].max_price
         brands = [i.brand for i in intents if i.brand]
         if len(set(brands)) == 1:   # "nike shorts and t-shirts": the brand applies to every choice
             for i in intents:
@@ -427,8 +431,8 @@ class QueryParser:
             return True, 'fashion attributes, occasion or audience recognised', content
         if not content:
             return False, 'no shopping content', content
-        if QUESTION_RE.search(text):
-            return False, 'a factual question rather than a shopping request', content
+        if QUESTION_RE.search(text) or IMPERATIVE_RE.search(text):
+            return False, 'an instruction or factual question rather than a shopping request', content
         known = [t for t in content if self.index.df.get(analyze(t)[0] if analyze(t) else t, 0) >= 2]
         if len(known) / len(content) >= 0.6:
             return True, 'query words are well attested in the catalog', content

@@ -352,14 +352,21 @@ class CatalogIndex:
             return word
         if word in self.known_words:
             # a catalog hapax one edit from shopper vocabulary is most likely a typo ("sunglases")
-            near = [c for c in self._candidates(word) if c in self.lexicon and _damerau(word, c) == 1]
+            near = [c for c in self._candidates(word) if c in self.lexicon and _damerau(word, c) == 1
+                    and (len(word) >= 6 or c[0] == word[0])]
             return min(near, key=lambda c: (-self.word_freq.get(c, 0), c)) if near else word
         cands = self._candidates(word)
         best, best_key = word, None
+        # Two edits only for long words ("system" must not become "sister"); short words keep
+        # their first letter ("live" must not become "olive").
         limit = 1 if len(word) < 6 else 2
         for cand in cands:
             dist = _damerau(word, cand)
-            if dist <= limit:
+            if dist > limit or (len(word) < 6 and cand[0] != word[0]):
+                continue
+            if dist == 2 and (cand[0] != word[0] or cand[-1] != word[-1]):
+                continue
+            if True:
                 key = (dist, cand not in self.lexicon, cand[0] != word[0], -self.word_freq[cand], cand)
                 if best_key is None or key < best_key:
                     best, best_key = cand, key

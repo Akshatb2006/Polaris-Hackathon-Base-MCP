@@ -20,7 +20,9 @@ FIELD_SORT_KEEP = 0.72       # for field sorts keep candidates scoring >= this f
 FIELD_SORT_CAP = 400
 MAX_CANDIDATES = 10_100      # offset (<= 10000) + limit (<= 100)
 CONCEPT_MIN = float(os.getenv('CONCEPT_MIN', '0.85'))   # type or description head; a name-only word is not proof
-CHILD_PRIOR = 0.06           # unqualified requests are usually for adults
+CHILD_PRIOR = 0.2            # unqualified requests are for adults; children's items rank after adult ones
+W_EXACT_COLOR = 0.25         # 'grey' means Grey before Dark Grey or Light Grey
+W_PRIMARY_TYPE = 0.15        # 'jacket' means product_type Jacket before a blazer described as a jacket
 DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
 NAME_REPEAT_PENALTY = float(os.getenv('NAME_REPEAT_PENALTY', '0'))   # variants are full-credit slots to a relevance judge
 # Ablation switch for evaluation: hybrid (default), lexical (no dense channel) or dense (no BM25F).
@@ -184,6 +186,14 @@ class SearchEngine:
                  + W_PATTERN * parts['pattern'] + W_OCCASION * parts['occasion'] + w_q * quality)
         if intent.who is None:
             score -= CHILD_PRIOR * idx.who['kids'][cand]
+        if intent.colors:
+            score += W_EXACT_COLOR * idx.color_mask(intent.colors[:1])[cand]
+        if intent.concepts:
+            primary_types = {t for c in intent.concepts for t in CONCEPTS[c][0]}
+            if primary_types:
+                score += W_PRIMARY_TYPE * np.isin(idx.codes['product_type'][cand],
+                                                  [idx.vocab['product_type'][t.casefold()] for t in primary_types
+                                                   if t.casefold() in idx.vocab['product_type']])
         for phrase in intent.demote_phrases:
             score -= DEMOTE_PENALTY * idx.phrase_mask(phrase)[cand]
         if intent.soft_cheap or intent.soft_premium:
