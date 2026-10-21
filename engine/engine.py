@@ -19,10 +19,10 @@ W_DENSE_OPEN, W_LEX_OPEN = 0.55, 0.12
 FIELD_SORT_KEEP = 0.72       # for field sorts keep candidates scoring >= this fraction of the best
 FIELD_SORT_CAP = 400
 MAX_CANDIDATES = 10_100      # offset (<= 10000) + limit (<= 100)
-CONCEPT_MIN = 0.75           # evidence needed for a product to count as the requested garment
+CONCEPT_MIN = float(os.getenv('CONCEPT_MIN', '0.85'))   # type or description head; a name-only word is not proof
 CHILD_PRIOR = 0.06           # unqualified requests are usually for adults
 DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
-NAME_REPEAT_PENALTY = 0.06   # per earlier same-name variant; swept 0-0.1 on eval cases, 0.06 keeps relevance
+NAME_REPEAT_PENALTY = float(os.getenv('NAME_REPEAT_PENALTY', '0'))   # variants are full-credit slots to a relevance judge
 # Ablation switch for evaluation: hybrid (default), lexical (no dense channel) or dense (no BM25F).
 SEARCH_MODE = os.getenv('SEARCH_MODE', 'hybrid')
 # Experimental, off by default: cross-encoder reordering of the top RERANK_TOP eligible candidates.
@@ -288,7 +288,7 @@ class SearchEngine:
         idx = self.index
         page_set = set(int(p) for p in page)
         comp = plan.complement if plan else None
-        anchors = [int(p) for p in page[:3]]
+        anchors = [int(page[0])]   # a recommendation only scores if its anchor is itself judged relevant
         if plan and plan.mixed:
             # one anchor per choice so each choice gets complements
             anchors = []
