@@ -101,4 +101,8 @@ app = Starlette(lifespan=lifespan, routes=[
 ])
 
 if __name__ == '__main__':
-    uvicorn.run(app, host=os.getenv('HOST', '0.0.0.0'), port=int(os.getenv('PORT', '8000')))
+    # Keep idle connections open longer than the load balancer in front of us does (AWS ALB
+    # default 60 s). If the app closes an idle keep-alive first, the balancer can forward the
+    # next request down a dead connection and answer 502 without the app ever seeing it.
+    uvicorn.run(app, host=os.getenv('HOST', '0.0.0.0'), port=int(os.getenv('PORT', '8000')),
+                timeout_keep_alive=int(os.getenv('KEEP_ALIVE_SECONDS', '120')))
