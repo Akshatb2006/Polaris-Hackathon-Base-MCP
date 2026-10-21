@@ -6,7 +6,11 @@ dnf install -y git-lfs || (curl -fsSL https://github.com/git-lfs/git-lfs/release
   | tar -xz -C /tmp && /tmp/git-lfs-3.6.1/install.sh)
 systemctl enable --now docker
 git lfs install --system
-cd /opt && git clone -b "__BRANCH__" "__REPO_URL__" app && cd app && git lfs pull
+cd /opt && git clone -b "__BRANCH__" "__REPO_URL__" app && cd app
+COMMIT="__COMMIT__"
+if [ -n "$COMMIT" ]; then git checkout --detach "$COMMIT"; fi
+git lfs pull
+echo "deploying $(git rev-parse HEAD)"
 echo "05b6aa5e8e8c1c8c997d584f8288e432862454f8820531e13473443e83c8f073  data/products.json" | sha256sum -c -
 TOKEN=$(curl -s -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 300')
 PUBHOST=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)

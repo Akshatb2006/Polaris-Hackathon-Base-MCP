@@ -59,31 +59,42 @@ catalog JSON is parsed at startup; ready in about 13 s including warm-up.
 
 ## Deploy on AWS (your account)
 
-Prerequisites: AWS CLI v2 configured with a profile that can create EC2 instances and security groups in a
-region with a default VPC; the fork pushed with Git LFS objects. Use an instance with at least 4 GB RAM
-(`c7i.large` default). The script never deletes anything; it creates one security group and one instance.
+Prerequisites: AWS CLI v2 with a profile for the account to deploy into, allowed to create EC2 instances and
+security groups in a region that has a default VPC; the fork pushed with its Git LFS objects. Use an x86_64
+instance with at least 4 GiB RAM (`c7i.large` default; peak memory is about 1.8 GB at startup).
 
 ```sh
 AWS_PROFILE=your-profile AWS_REGION=ap-south-1 \
-REPO_URL=https://github.com/<you>/Polaris-Hackathon-Base-MCP.git BRANCH=hybrid-search \
+REPO_URL=https://github.com/<you>/Polaris-Hackathon-Base-MCP.git BRANCH=hybrid-search COMMIT=79f46e4 \
 RUNNER_CIDR=<organizer-runner-ip>/32 ./deploy/aws_deploy.sh
+./deploy/verify_endpoint.sh http://<public-ip>:8000     # from your laptop, before submitting
+AWS_PROFILE=your-profile AWS_REGION=ap-south-1 ./deploy/aws_teardown.sh   # when finished
 ```
+
+`aws_deploy.sh` prints the account, region, rules and code it will deploy and asks before creating anything.
+It creates one security group (port 8000 from `RUNNER_CIDR` and your current IP; port 22 only with `KEY_NAME`) and one
+instance with a 30 GB gp3 root volume deleted on termination, all tagged `Project=polaris-search`. It refuses to start
+a second instance with the same `NAME`. `aws_teardown.sh` lists, confirms, terminates those instances and deletes the
+group; nothing else is touched. Cost is the on-demand instance plus its volume until teardown (check the EC2 pricing
+page for your region).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `AWS_PROFILE` | CLI default | Credentials for the account to deploy into |
-| `AWS_REGION` | `ap-south-1` | Pick the organizer runner's region when published (latency counts) |
+| `AWS_REGION` | `ap-south-1` | Use the organizer runner's region when published (network latency is scored) |
 | `REPO_URL` | required | HTTPS clone URL of the fork |
-| `BRANCH` | `hybrid-search` | Branch to deploy |
-| `RUNNER_CIDR` | `0.0.0.0/0` | Who may reach port 8000; set to the runner IP `/32` when published |
+| `BRANCH` / `COMMIT` | `hybrid-search` / branch head | Code to deploy; `COMMIT` pins an exact revision |
+| `RUNNER_CIDR` | `0.0.0.0/0` (warned) | Who may reach port 8000; set to the runner IP `/32` |
 | `INSTANCE_TYPE` | `c7i.large` | x86_64, 2 vCPU, 4 GiB |
-| `KEY_NAME` | none | Optional EC2 key pair for SSH |
-| `NAME` | `polaris-search` | Security group and instance name |
+| `KEY_NAME` | none | Optional EC2 key pair; opens SSH from your IP only |
+| `NAME` | `polaris-search` | Name tag and security group name |
+| `YES` | unset | `1` skips the confirmation prompt |
 
-The instance clones the branch, verifies the catalog SHA-256, builds the image and starts it with its public
-hostname and IP in `MCP_ALLOWED_HOSTS`. Progress is in `/var/log/cloud-init-output.log` on the instance. Submit
-`http://<public-ip>:8000/mcp` after `curl http://<public-ip>:8000/healthz` reports `"dense": true` and
-`python smoke_test.py http://<public-ip>:8000/mcp` passes.
+The instance clones the code, verifies the catalog SHA-256, builds the image (about 6-10 minutes) and runs it with
+its public hostname and IP in `MCP_ALLOWED_HOSTS`. Progress is in `/var/log/cloud-init-output.log`. Rebooting is safe;
+**stopping and starting changes the public IP and breaks the endpoint (HTTP 421)**, so redeploy instead.
+`verify_endpoint.sh` checks `/healthz`, the 405 on `GET /mcp`, the starter smoke test and the local benchmark over
+the real network; none of it uses a competition attempt.
 
 ---
 
