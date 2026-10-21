@@ -67,6 +67,56 @@ def warm_up(catalog):
 
 class MCPApplication:
     async def __call__(self, scope, receive, send):
+        if os.getenv('MCP_TRACE', '0') == '1':
+            await self._traced(scope, receive, send)
+        else:
+            await self._handle(scope, receive, send)
+
+    async def _traced(self, scope, receive, send):
+        """Diagnostic wire log (MCP_TRACE=1): every request is logged before it is handled, and
+        its response status/size after, so a request that never completes is still visible."""
+        import json as _json
+        import logging
+        import time
+        import traceback
+        log = logging.getLogger('mcp.trace')
+        headers = {k.decode(): v.decode() for k, v in scope.get('headers', [])}
+        chunks, more = [], True
+        while more:
+            msg = await receive()
+            chunks.append(msg.get('body', b''))
+            more = msg.get('more_body', False)
+        body = b''.join(chunks)
+        rid = f"{scope.get('client', ('?', 0))[0]}:{scope.get('client', ('?', 0))[1]}/{int(time.time() * 1000) % 100000}"
+        log.warning('TRACE %s >>> %s %s hdr=%s body=%s', rid, scope['method'], scope.get('query_string', b'').decode(),
+                    _json.dumps({k: headers.get(k) for k in ('accept', 'content-type', 'mcp-session-id',
+                                                              'mcp-protocol-version', 'user-agent', 'connection')}),
+                    body[:1500].decode('utf-8', 'replace'))
+        replayed = {'done': False}
+
+        async def receive_again():
+            if replayed['done']:
+                return {'type': 'http.disconnect'}
+            replayed['done'] = True
+            return {'type': 'http.request', 'body': body, 'more_body': False}
+        status, size, started = {'code': None}, {'n': 0}, time.perf_counter()
+
+        async def send_logged(message):
+            if message['type'] == 'http.response.start':
+                status['code'] = message['status']
+            elif message['type'] == 'http.response.body':
+                size['n'] += len(message.get('body', b''))
+                if not message.get('more_body', False):
+                    log.warning('TRACE %s <<< %s %d bytes in %.0f ms', rid, status['code'], size['n'],
+                                (time.perf_counter() - started) * 1000)
+            await send(message)
+        try:
+            await self._handle(scope, receive_again, send_logged)
+        except BaseException:
+            log.error('TRACE %s EXC %s', rid, traceback.format_exc()[-1500:])
+            raise
+
+    async def _handle(self, scope, receive, send):
         if scope['method'] == 'GET' and os.getenv('MCP_GET_STREAM', '0') != '1':
             # Stateless JSON transport offers no standalone server-to-client stream. The brief asks
             # for 405 here; MCP_GET_STREAM=1 restores the starter's behaviour (an open SSE stream)
