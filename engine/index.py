@@ -226,6 +226,8 @@ class CatalogIndex:
                 self.who[w][i] = True
             self.heads.append(description_head(p.get('description')))
         self.who['unknown'] = ~(self.who['men'] | self.who['women'] | self.who['kids'])
+        # Uninformative names ("id", "1", "x") give a shopper nothing to go on; rank them last.
+        self.weak_name = np.array([len(re.sub(r'[^a-z]', '', p['name'].casefold())) < 3 for p in self.products])
         q = np.where(np.isnan(self.rating), 3.0, self.rating)
         # Bayesian-shrunk rating prior in [-1, 1]; only ever a tie-breaker after relevance.
         self.quality = ((q * self.count + 3.6 * 3) / (self.count + 3) - 3.6) / 1.4

@@ -23,6 +23,7 @@ CONCEPT_MIN = float(os.getenv('CONCEPT_MIN', '0.85'))   # type or description he
 CHILD_PRIOR = 0.2            # unqualified requests are for adults; children's items rank after adult ones
 W_EXACT_COLOR = 0.25         # 'grey' means Grey before Dark Grey or Light Grey
 W_PRIMARY_TYPE = 0.15        # 'jacket' means product_type Jacket before a blazer described as a jacket
+WEAK_NAME_PENALTY = 0.3      # products named 'id', '1' etc. rank after informative ones
 DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
 NAME_REPEAT_PENALTY = float(os.getenv('NAME_REPEAT_PENALTY', '0'))   # variants are full-credit slots to a relevance judge
 # Ablation switch for evaluation: hybrid (default), lexical (no dense channel) or dense (no BM25F).
@@ -186,6 +187,7 @@ class SearchEngine:
                  + W_PATTERN * parts['pattern'] + W_OCCASION * parts['occasion'] + w_q * quality)
         if intent.who is None:
             score -= CHILD_PRIOR * idx.who['kids'][cand]
+        score -= WEAK_NAME_PENALTY * idx.weak_name[cand]
         if intent.colors:
             score += W_EXACT_COLOR * idx.color_mask(intent.colors[:1])[cand]
         if intent.concepts:
