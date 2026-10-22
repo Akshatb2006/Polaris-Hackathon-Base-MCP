@@ -28,7 +28,7 @@ W_HEAD_CONFLICT = 0.2        # a Sweater whose description opens "Top in ..." ra
 # With attribute words in the request ("striped", "oversized") the text channels carry the requirement
 # and the structural signals only tie-break.
 ATTR_TYPE_SCALE, ATTR_CONFLICT_SCALE = 0.5, 0.0
-REC_ANCHORS = 2              # recommendations are spread over the top primaries, not pinned to one
+REC_ANCHORS = 3              # recommendations are spread over the top primaries, not pinned to one
 REC_SAME_COLOUR_MIN = 3      # an anchor is preferred when at least this many complements share its colour
 MIXED_HEAD_FIRST = 8         # of the first ten pooled results, how many come from the first-named choice
 WEAK_NAME_PENALTY = 0.3      # products named 'id', '1' etc. rank after informative ones
@@ -460,22 +460,29 @@ class SearchEngine:
         strength = idx.concept_strength[concept][cand]
         score = 0.3 * sim + 0.5 * harmony + 0.15 * strength + 0.05 * idx.quality[cand]
         if concept == 'bag':
-            # A bag that completes an outfit is a handbag, shoulder bag, clutch or tote; utility and
-            # storage bags (gym, make-up, pencil case, waist bag) are not what "a complementary bag" means.
-            utility = np.zeros(len(cand), dtype=bool)
-            for word in ('gym', 'weekend', 'sports bag', 'mesh', 'backpack', 'rucksack', 'bumbag', 'bum bag',
-                         'waist bag', 'belt bag', 'make-up', 'makeup', 'pencil case', 'net bag', 'laptop',
-                         'toiletry', 'wash bag', 'shoe bag', 'storage', 'smartphone', 'phone bag', 'cosmetic',
-                         'lunch', 'drawstring bag', 'travel', 'duffel', 'pouch', 'dog'):
-                utility |= idx.phrase_mask(word)[cand]
-            handbag = np.zeros(len(cand), dtype=bool)
-            for word in ('shoulder bag', 'handbag', 'clutch', 'cross-body', 'crossbody', 'hobo', 'bucket bag',
-                         'saddle bag', 'purse', 'shoulder strap'):
-                handbag |= idx.phrase_mask(word)[cand]
-            tote = np.zeros(len(cand), dtype=bool)
-            for word in ('tote', 'shopper'):
-                tote |= idx.phrase_mask(word)[cand]
-            score = score - 0.5 * utility + 0.15 * handbag + 0.08 * (tote & ~handbag)
+            # The bag follows the anchor's style: a sports top takes a sports bag or backpack, a dress or
+            # tailored piece a clutch or shoulder bag, casual wear a tote or shopper. Storage bags
+            # (make-up, pencil case, laptop) never complete an outfit.
+            def any_of(words):
+                m = np.zeros(len(cand), dtype=bool)
+                for word in words:
+                    m |= idx.phrase_mask(word)[cand]
+                return m
+            storage = any_of(('make-up', 'makeup', 'pencil case', 'net bag', 'laptop', 'toiletry', 'wash bag',
+                              'shoe bag', 'storage', 'smartphone', 'phone bag', 'cosmetic', 'lunch', 'drawstring bag',
+                              'travel', 'duffel', 'pouch', 'dog', 'weekend'))
+            sporty = any_of(('gym', 'sports bag', 'sports', 'backpack', 'rucksack', 'bumbag', 'bum bag', 'waist bag',
+                             'belt bag', 'mesh', 'nylon'))
+            handbag = any_of(('shoulder bag', 'handbag', 'clutch', 'cross-body', 'crossbody', 'hobo', 'bucket bag',
+                              'saddle bag', 'purse', 'shoulder strap'))
+            tote = any_of(('tote', 'shopper'))
+            style = anchor_style(self.products[anchor])
+            if style == 'sport':
+                score = score - 0.5 * storage + 0.25 * sporty - 0.1 * (handbag & ~sporty)
+            elif style == 'dressy':
+                score = score - 0.5 * storage - 0.4 * sporty + 0.2 * handbag
+            else:
+                score = score - 0.5 * storage - 0.1 * sporty + 0.12 * handbag + 0.15 * (tote & ~handbag)
         order = np.lexsort((cand, -np.round(score, 9)))[:per_pool]
         return [(int(cand[o]), float(harmony[o])) for o in order]
 
@@ -492,6 +499,17 @@ class SearchEngine:
         text = (f"{c['product_type']} ({c['name']}) to complete the look with the {a['product_type'].lower()} "
                 f"'{a['name']}'; {tone}.")
         return text[:300]
+
+
+def anchor_style(p):
+    """sport, dressy or casual, from the catalog's own section, type and description."""
+    text = f"{p['name']} {p.get('description') or ''}".casefold()
+    if 'sport' in p['section'].casefold() or any(w in text for w in ('functional fabric', 'sports ', 'running', 'training', 'track jacket')):
+        return 'sport'
+    if p['product_type'] in ('Dress', 'Blazer', 'Blouse', 'Skirt', 'Heels', 'Pumps', 'Heeled sandals') \
+            or any(w in p['section'] for w in ('Tailoring', 'Premium', 'Occasion', 'Party')):
+        return 'dressy'
+    return 'casual'
 
 
 def _interleave(lists, head=10, head_first=MIXED_HEAD_FIRST):
