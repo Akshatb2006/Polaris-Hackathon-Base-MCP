@@ -239,6 +239,7 @@ OCCASIONS = {
     'summer': (['dress', 'shorts', 'top', 'tshirt', 'sandals', 'skirt'], 'summer airy lightweight linen'),
     'spring': (['dress', 'top', 'blouse', 'jacket'], 'light airy'),
     'winter': (['coat', 'jacket', 'sweater', 'boots', 'scarf', 'gloves', 'hat', 'cardigan', 'hoodie'], 'warm padded wool knit lined'),
+    'feet': (['socks', 'slippers', 'boots', 'sneakers', 'shoes'], 'socks shoes boots slippers footwear'),
     'cold': (['coat', 'jacket', 'sweater', 'cardigan', 'scarf', 'gloves', 'hat', 'boots'], 'warm padded wool lined'),
     'snow': (['coat', 'jacket', 'boots', 'gloves', 'hat'], 'warm padded water-repellent'),
     'autumn': (['jacket', 'sweater', 'cardigan', 'boots', 'coat'], 'knit warm'),

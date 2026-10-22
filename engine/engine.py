@@ -30,7 +30,7 @@ W_HEAD_CONFLICT = 0.2        # a Sweater whose description opens "Top in ..." ra
 ATTR_TYPE_SCALE, ATTR_CONFLICT_SCALE = 0.5, 0.0
 REC_ANCHORS = 2              # recommendations are spread over the top primaries, not pinned to one
 REC_SAME_COLOUR_MIN = 3      # an anchor is preferred when at least this many complements share its colour
-MIXED_HEAD_FIRST = 7         # of the first ten pooled results, how many come from the first-named choice
+MIXED_HEAD_FIRST = 8         # of the first ten pooled results, how many come from the first-named choice
 WEAK_NAME_PENALTY = 0.3      # products named 'id', '1' etc. rank after informative ones
 DEMOTE_PENALTY = 0.35         # products the request rules out by role (bridal gowns for a guest)
 NAME_REPEAT_PENALTY = float(os.getenv('NAME_REPEAT_PENALTY', '0'))   # variants are full-credit slots to a relevance judge
@@ -218,8 +218,10 @@ class SearchEngine:
             wanted = set(intent.concepts)
             children = {child for child, parent in REFINES.items() if parent in wanted}
             conflict = (heads != '') & ~np.isin(heads, list(wanted))
+            # a refinement of the request ("5-pocket jeans" for trousers) only tie-breaks when the shopper
+            # gave attributes; a plain lookup wants the plain garment first.
             score -= conflict_scale * W_HEAD_CONFLICT * (conflict & ~np.isin(heads, list(children)))
-            score -= conflict_scale * 0.5 * W_HEAD_CONFLICT * (conflict & np.isin(heads, list(children)))
+            score -= (1.0 if plain else 0.5 * conflict_scale) * W_HEAD_CONFLICT * (conflict & np.isin(heads, list(children)))
         for phrase in intent.demote_phrases:
             score -= DEMOTE_PENALTY * idx.phrase_mask(phrase)[cand]
         if intent.soft_cheap or intent.soft_premium:
